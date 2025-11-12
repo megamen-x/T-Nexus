@@ -1,1 +1,2 @@
-### Docs-Assistant
+# T-Nexus
+RAG по базе данных Т Бизнес
