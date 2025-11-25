@@ -1,0 +1,516 @@
+<!-- frontend/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T-Nexus · Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+<div id="root" class="min-h-screen"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+const API_BASE = window.location.origin;
+const getToken = () => localStorage.getItem('tnexus_token');
+const getEmail = () => localStorage.getItem('tnexus_email') || 'support@tnexus.ai';
+const logout = () => {
+    localStorage.removeItem('tnexus_token');
+    localStorage.removeItem('tnexus_email');
+    window.location.href = '/login';
+};
+const apiFetch = async (endpoint, options = {}) => {
+    const token = getToken();
+    if (!token) {
+        window.location.href = '/login';
+        return null;
+    }
+    const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        ...options.headers
+    };
+    const response = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+    if (response.status === 401) {
+        logout();
+        return null;
+    }
+    return response.json();
+};
+const navItems = [
+    { key: 'dashboard', label: 'Dashboard Overview' },
+    { key: 'metrics', label: 'Metrics' },
+    { key: 'manual', label: 'Manual Review' }
+];
+const Loader = () => (
+    <div className="flex items-center justify-center py-12">
+        <div className="h-3 w-3 bg-slate-100 rounded-full animate-ping"></div>
+    </div>
+);
+const Header = ({ pageTitle, email }) => (
+    <header className="border-b border-white/5 bg-slate-950/40 backdrop-blur">
+        <div className="flex items-center justify-between px-8 py-6">
+            <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-fuchsia-500 text-slate-950 font-semibold text-xl flex items-center justify-center">T</div>
+                <div>
+                    <p className="text-xs tracking-[0.6em] uppercase text-white/50">T-Nexus</p>
+                    <h1 className="text-2xl font-semibold">{pageTitle}</h1>
+                </div>
+            </div>
+            <div className="flex items-center gap-6">
+                <div className="text-right">
+                    <p className="font-medium">{email.split('@')[0]}</p>
+                    <p className="text-xs text-white/50">{email}</p>
+                    <p className="text-[10px] text-emerald-400 tracking-[0.4em] uppercase">JWT Active</p>
+                </div>
+                <button onClick={logout} className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center text-sm hover:bg-white/20 transition">
+                    {email.slice(0, 2).toUpperCase()}
+                </button>
+            </div>
+        </div>
+    </header>
+);
+const Sidebar = ({ activePage, onChange, onNotifications, onSettings }) => (
+    <aside className="w-64 border-r border-white/5 bg-slate-950/50 flex flex-col justify-between">
+        <div>
+            <div className="px-6 py-6 text-xs uppercase tracking-[0.8em] text-white/40">Solution</div>
+            <nav className="flex flex-col">
+                {navItems.map(item => (
+                    <button key={item.key} onClick={() => onChange(item.key)} className={`text-left px-6 py-4 border-l-2 transition ${activePage === item.key ? 'border-cyan-400 bg-white/5 text-white' : 'border-transparent text-white/60 hover:text-white hover:bg-white/5'}`}>
+                        {item.label}
+                    </button>
+                ))}
+            </nav>
+        </div>
+        <div className="px-6 py-6 space-y-3">
+            <button onClick={onNotifications} className="w-full rounded-xl bg-white/10 px-4 py-3 text-sm font-medium hover:bg-white/20">Notifications</button>
+            <button onClick={onSettings} className="w-full rounded-xl border border-white/10 px-4 py-3 text-sm font-medium hover:border-white/30">Settings</button>
+        </div>
+    </aside>
+);
+const KPIGrid = ({ items }) => (
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {items.map(item => (
+            <div key={item.label} className="rounded-2xl border border-white/5 bg-white/5 px-5 py-4">
+                <p className="text-sm text-white/60">{item.label}</p>
+                <p className="text-2xl font-semibold mt-2">{item.value}</p>
+                <p className="text-xs mt-1 text-emerald-400">{item.delta}</p>
+            </div>
+        ))}
+    </div>
+);
+const StatCard = ({ label, value, sublabel }) => (
+    <div className="rounded-2xl border border-white/5 bg-white/5 px-6 py-5">
+        <p className="text-sm text-white/60">{label}</p>
+        <p className="text-3xl font-semibold mt-2">{value}</p>
+        {sublabel && <p className="text-xs mt-1 text-white/40">{sublabel}</p>}
+    </div>
+);
+const ChartPanel = ({ title, description, config }) => {
+    const canvasRef = useRef(null);
+    const chartRef = useRef(null);
+    useEffect(() => {
+        if (!config || !canvasRef.current) return;
+        if (chartRef.current) chartRef.current.destroy();
+        chartRef.current = new Chart(canvasRef.current, config);
+        return () => {
+            if (chartRef.current) chartRef.current.destroy();
+        };
+    }, [config]);
+    return (
+        <div className="rounded-2xl border border-white/5 bg-white/5 p-6">
+            <div className="flex items-center justify-between mb-4">
+                <div>
+                    <p className="text-sm text-white/60">{description}</p>
+                    <h3 className="text-lg font-semibold">{title}</h3>
+                </div>
+            </div>
+            <canvas ref={canvasRef} height="220"></canvas>
+        </div>
+    );
+};
+const IncidentList = ({ incidents }) => (
+    <div className="rounded-2xl border border-white/5 bg-white/5 p-6">
+        <div className="flex items-center justify-between mb-3">
+            <div>
+                <p className="text-sm text-white/60">System Watch</p>
+                <h3 className="text-lg font-semibold">Recent Incidents</h3>
+            </div>
+            <span className="text-xs text-white/40">Auto-sync</span>
+        </div>
+        <div className="space-y-4">
+            {incidents.map(item => (
+                <div key={item.id} className="flex items-center justify-between border-b border-white/5 pb-3 last:border-0 last:pb-0">
+                    <div>
+                        <p className="text-sm font-medium">{item.id}</p>
+                        <p className="text-sm text-white/60">{item.impact}</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-xs text-amber-300">{item.status}</p>
+                        <p className="text-xs text-white/40">{item.timestamp}</p>
+                    </div>
+                </div>
+            ))}
+        </div>
+    </div>
+);
+const DashboardOverview = ({ data }) => {
+    if (!data) return <Loader />;
+    const trafficConfig = {
+        type: 'line',
+        data: {
+            labels: data.traffic.labels,
+            datasets: [{
+                label: 'Sessions',
+                data: data.traffic.values,
+                borderColor: '#22d3ee',
+                backgroundColor: 'rgba(34,211,238,0.15)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.2)' } },
+                y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.2)' } }
+            }
+        }
+    };
+    const ratingConfig = {
+        type: 'doughnut',
+        data: {
+            labels: ['Positive', 'Neutral', 'Negative'],
+            datasets: [{
+                data: [data.ratings.positive, data.ratings.neutral, data.ratings.negative],
+                backgroundColor: ['#34d399', '#fbbf24', '#f87171'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } }
+        }
+    };
+    return (
+        <div className="space-y-8">
+            <KPIGrid items={data.kpis} />
+            <div className="grid gap-4 md:grid-cols-3">
+                <StatCard label="Total Conversations" value={data.conversations.total.toLocaleString()} sublabel={`Avg duration ${data.conversations.avgDuration}`} />
+                <StatCard label="Success Rate" value={`${(data.successRate * 100).toFixed(1)}%`} sublabel="Hand-off free" />
+                <StatCard label="Period" value={data.period} sublabel="Adjust in Settings" />
+            </div>
+            <div className="grid gap-6 lg:grid-cols-3">
+                <div className="lg:col-span-2">
+                    <ChartPanel title="User Traffic" description="Telegram · Web · CSV" config={trafficConfig} />
+                </div>
+                <div>
+                    <ChartPanel title="Rating Distribution" description="LLM feedback" config={ratingConfig} />
+                </div>
+            </div>
+            <IncidentList incidents={data.incidents} />
+        </div>
+    );
+};
+const MetricRow = ({ label, value, accent }) => (
+    <div className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+        <p className="text-sm text-white/60">{label}</p>
+        <p className={`text-sm font-medium ${accent}`}>{value}</p>
+    </div>
+);
+const TagCloud = ({ tags }) => (
+    <div className="flex flex-wrap gap-3">
+        {tags.map(tag => (
+            <span key={tag.label} style={{ fontSize: `${12 + tag.weight * 2}px` }} className="px-3 py-1 rounded-full bg-white/10 text-white/80">
+                #{tag.label}
+            </span>
+        ))}
+    </div>
+);
+const MetricsPage = ({ data }) => {
+    if (!data) return <Loader />;
+    const ratioConfig = {
+        type: 'bar',
+        data: {
+            labels: data.llm.labels,
+            datasets: [
+                { label: '👍', data: data.llm.positive, backgroundColor: 'rgba(74,222,128,0.8)' },
+                { label: '👎', data: data.llm.negative, backgroundColor: 'rgba(248,113,113,0.8)' }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { labels: { color: '#94a3b8' } } },
+            scales: {
+                x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+                y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.2)' } }
+            }
+        }
+    };
+    return (
+        <div className="space-y-8">
+            <div className="grid gap-6 lg:grid-cols-2">
+                <div className="rounded-2xl border border-white/5 bg-white/5 p-6 space-y-4">
+                    <h3 className="text-lg font-semibold">LLM Metrics</h3>
+                    <MetricRow label="Requests" value={data.llm.requests.toLocaleString()} accent="text-white" />
+                    <MetricRow label="Avg token generation time" value={`${data.llm.avgTime}s`} accent="text-cyan-300" />
+                    <MetricRow label="Avg tokens per response" value={data.llm.avgTokens} accent="text-cyan-300" />
+                    <MetricRow label="Avg response length" value={`${data.llm.avgResponseLength} tokens`} accent="text-white" />
+                </div>
+                <ChartPanel title="Feedback Ratio" description="👍 vs 👎" config={ratioConfig} />
+            </div>
+            <div className="grid gap-6 lg:grid-cols-2">
+                <div className="rounded-2xl border border-white/5 bg-white/5 p-6 space-y-4">
+                    <h3 className="text-lg font-semibold">HippoRAG Metrics</h3>
+                    <MetricRow label="Average relevance score" value={data.hipporag.relevance.toFixed(3)} accent="text-emerald-300" />
+                    <div>
+                        <p className="text-sm text-white/60 mb-2">Top 5 Most Popular Queries</p>
+                        <ul className="space-y-1 text-sm">
+                            {data.hipporag.topQueries.map(item => (
+                                <li key={item} className="flex items-center justify-between text-white/80">
+                                    <span>{item}</span>
+                                    <span className="text-white/40">HippoRAG</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                    <div>
+                        <p className="text-sm text-white/60 mb-2">Top 5 Queries with Lowest Speed</p>
+                        <ul className="space-y-1 text-sm">
+                            {data.hipporag.slowQueries.map(item => (
+                                <li key={item.label} className="flex items-center justify-between">
+                                    <span>{item.label}</span>
+                                    <span className="text-amber-300">{item.duration}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+                <div className="rounded-2xl border border-white/5 bg-white/5 p-6 space-y-4">
+                    <h3 className="text-lg font-semibold">User Metrics</h3>
+                    <MetricRow label="Completion rate" value={`${(data.user.completionRate * 100).toFixed(1)}%`} accent="text-emerald-300" />
+                    <div>
+                        <p className="text-sm text-white/60 mb-2">Top N Queries</p>
+                        <ul className="space-y-1 text-sm">
+                            {data.user.topQueries.map(item => (
+                                <li key={item} className="flex items-center justify-between">
+                                    <span>{item}</span>
+                                    <span className="text-white/40">Users</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                    <div>
+                        <p className="text-sm text-white/60 mb-2">Tag cloud</p>
+                        <TagCloud tags={data.user.tagCloud} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+const ManualReviewPage = ({ items, onUpdate }) => {
+    const [selected, setSelected] = useState(items[0] || null);
+    const [adminResponse, setAdminResponse] = useState(selected ? selected.adminResponse : '');
+    const [syncMessage, setSyncMessage] = useState('');
+    useEffect(() => {
+        if (items.length > 0 && !selected) {
+            setSelected(items[0]);
+            setAdminResponse(items[0].adminResponse);
+        }
+    }, [items]);
+    const handleSelect = (entry) => {
+        setSelected(entry);
+        setAdminResponse(entry.adminResponse);
+        setSyncMessage('');
+    };
+    const handleSync = async () => {
+        if (!selected) return;
+        const result = await apiFetch(`/api/manual-review/${selected.id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ adminResponse })
+        });
+        if (result) {
+            const updated = { ...selected, adminResponse };
+            onUpdate(updated);
+            setSelected(updated);
+            setSyncMessage('Synced with FastAPI gateway');
+            setTimeout(() => setSyncMessage(''), 2000);
+        }
+    };
+    if (!items.length) return <Loader />;
+    return (
+        <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-2xl border border-white/5 bg-white/5 p-6">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Forwarded Questions</h3>
+                    <span className="text-xs text-white/50">Scrollable</span>
+                </div>
+                <div className="max-h-[520px] overflow-y-auto pr-2 space-y-2">
+                    {items.map(entry => (
+                        <button key={entry.id} onClick={() => handleSelect(entry)} className={`w-full text-left px-4 py-3 rounded-xl border ${selected && selected.id === entry.id ? 'border-cyan-400 bg-cyan-400/10' : 'border-white/5 bg-white/5 hover:border-white/30'}`}>
+                            <p className="text-xs text-white/50">#{entry.id}</p>
+                            <p className="text-sm font-medium">{entry.title}</p>
+                        </button>
+                    ))}
+                </div>
+            </div>
+            <div className="rounded-2xl border border-white/5 bg-white/5 p-6 space-y-4">
+                {selected && (
+                    <>
+                        <div>
+                            <p className="text-xs text-white/50">Full question</p>
+                            <textarea readOnly value={selected.question} className="mt-1 w-full rounded-xl bg-white/10 px-4 py-3 text-sm min-h-[100px]" />
+                        </div>
+                        <div>
+                            <p className="text-xs text-white/50">Model response</p>
+                            <textarea readOnly value={selected.modelResponse} className="mt-1 w-full rounded-xl bg-white/10 px-4 py-3 text-sm min-h-[100px]" />
+                        </div>
+                        <div>
+                            <p className="text-xs text-white/50">Support admin response</p>
+                            <textarea value={adminResponse} onChange={e => setAdminResponse(e.target.value)} placeholder="Craft escalation note" className="mt-1 w-full rounded-xl bg-slate-950/60 px-4 py-3 text-sm min-h-[100px]" />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <button onClick={handleSync} className="rounded-xl bg-gradient-to-r from-cyan-400 to-fuchsia-500 text-slate-950 font-semibold px-4 py-2 text-sm">Sync with FastAPI</button>
+                            <p className="text-xs text-emerald-300">{syncMessage}</p>
+                        </div>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
+const NotificationsModal = ({ items, onClose }) => (
+    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur flex items-center justify-center z-50">
+        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900/90 p-6 space-y-4">
+            <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Notifications</h3>
+                <button onClick={onClose} className="text-sm text-white/50 hover:text-white">Close</button>
+            </div>
+            <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                {items.map(item => (
+                    <div key={item.id} className="rounded-xl border border-white/10 px-4 py-3">
+                        <p className="text-sm font-medium">{item.title}</p>
+                        <p className="text-sm text-white/60">{item.message}</p>
+                        <p className="text-xs text-white/40 mt-1">{item.ts}</p>
+                    </div>
+                ))}
+            </div>
+        </div>
+    </div>
+);
+const SettingsPanel = ({ open, onClose }) => (
+    <div className={`fixed inset-y-0 right-0 w-80 bg-slate-900/90 border-l border-white/10 backdrop-blur transform transition ${open ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="p-6 space-y-5 h-full flex flex-col">
+            <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Settings</h3>
+                <button onClick={onClose} className="text-sm text-white/50 hover:text-white">Close</button>
+            </div>
+            <div className="space-y-4 flex-1 overflow-y-auto">
+                <div>
+                    <p className="text-xs text-white/50">Reporting window</p>
+                    <select className="w-full mt-1 rounded-xl bg-white/10 px-3 py-2 text-sm">
+                        <option>Last 7 days</option>
+                        <option>Last 30 days</option>
+                        <option>Quarter to date</option>
+                    </select>
+                </div>
+                <div>
+                    <p className="text-xs text-white/50">Notifications</p>
+                    <label className="flex items-center justify-between mt-1">
+                        <span className="text-sm">Telegram alerts</span>
+                        <input type="checkbox" defaultChecked className="accent-cyan-400" />
+                    </label>
+                    <label className="flex items-center justify-between mt-3">
+                        <span className="text-sm">RabbitMQ health</span>
+                        <input type="checkbox" defaultChecked className="accent-cyan-400" />
+                    </label>
+                </div>
+                <div>
+                    <p className="text-xs text-white/50">Integrations</p>
+                    <div className="space-y-2 mt-2">
+                        <div className="rounded-xl border border-white/10 px-3 py-2 flex items-center justify-between">
+                            <span className="text-sm">HippoRAG</span>
+                            <span className="text-xs text-emerald-300">Connected</span>
+                        </div>
+                        <div className="rounded-xl border border-white/10 px-3 py-2 flex items-center justify-between">
+                            <span className="text-sm">Aiogram bot</span>
+                            <span className="text-xs text-emerald-300">Online</span>
+                        </div>
+                        <div className="rounded-xl border border-white/10 px-3 py-2 flex items-center justify-between">
+                            <span className="text-sm">RabbitMQ</span>
+                            <span className="text-xs text-amber-300">3 queues</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button className="w-full rounded-xl bg-gradient-to-r from-cyan-400 to-fuchsia-500 text-slate-950 font-semibold py-2 text-sm">Save</button>
+        </div>
+    </div>
+);
+const App = () => {
+    const [activePage, setActivePage] = useState('dashboard');
+    const [overview, setOverview] = useState(null);
+    const [metrics, setMetrics] = useState(null);
+    const [manualItems, setManualItems] = useState([]);
+    const [notifications, setNotifications] = useState([]);
+    const [notificationsOpen, setNotificationsOpen] = useState(false);
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    useEffect(() => {
+        const token = getToken();
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+        setIsAuthenticated(true);
+        const loadData = async () => {
+            const overviewData = await apiFetch('/api/overview');
+            if (overviewData) setOverview(overviewData);
+            const metricsData = await apiFetch('/api/metrics');
+            if (metricsData) setMetrics(metricsData);
+            const manualData = await apiFetch('/api/manual-review');
+            if (manualData) setManualItems(manualData);
+            const notificationsData = await apiFetch('/api/notifications');
+            if (notificationsData) setNotifications(notificationsData);
+        };
+        loadData();
+    }, []);
+    const handleManualUpdate = (updated) => {
+        setManualItems(prev => prev.map(item => (item.id === updated.id ? updated : item)));
+    };
+    if (!isAuthenticated) {
+        return <Loader />;
+    }
+    const renderContent = () => {
+        if (activePage === 'dashboard') return <DashboardOverview data={overview} />;
+        if (activePage === 'metrics') return <MetricsPage data={metrics} />;
+        if (activePage === 'manual') return <ManualReviewPage items={manualItems} onUpdate={handleManualUpdate} />;
+        return null;
+    };
+    return (
+        <div className="min-h-screen flex flex-col">
+            <Header pageTitle={navItems.find(item => item.key === activePage)?.label || ''} email={getEmail()} />
+            <div className="flex flex-1">
+                <Sidebar
+                    activePage={activePage}
+                    onChange={setActivePage}
+                    onNotifications={() => setNotificationsOpen(true)}
+                    onSettings={() => setSettingsOpen(true)}
+                />
+                <main className="flex-1 p-6 overflow-y-auto">
+                    {renderContent()}
+                </main>
+            </div>
+            {notificationsOpen && <NotificationsModal items={notifications} onClose={() => setNotificationsOpen(false)} />}
+            <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        </div>
+    );
+};
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
