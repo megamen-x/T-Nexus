@@ -60,5 +60,20 @@ async def register_page():
 async def health_check():
     return {"status": "healthy", "service": "T-Nexus"}
 
+@app.get("/api/bot/stats")
+async def bot_stats():
+    from backend.telegram.tg_database import TelegramDatabase
+    from backend.config import TG_DB_PATH
+    
+    try:
+        db = TelegramDatabase(TG_DB_PATH)
+        return {
+            "total_conversations": db.get_total_conversations(),
+            "total_messages": db.get_total_messages(),
+            "feedback_stats": db.get_feedback_stats()
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
 if os.path.exists(frontend_path):
     app.mount("/static", StaticFiles(directory=frontend_path), name="static")

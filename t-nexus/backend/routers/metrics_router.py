@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from datetime import datetime, timedelta
 
 from backend.database import get_db
 from backend.models import LLMRequest, Feedback, RAGQuery, UserQuery
