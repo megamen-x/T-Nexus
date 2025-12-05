@@ -79,46 +79,46 @@ https://drive.google.com/file/d/1FX3fw95I25ZXZTsWsgpcxJiVebxllx5g/view?usp=shari
   
   **```Telegram-bot + Dashboard + FastAPI + ML-models;```**
 
-  <details>
-    <summary> <strong><i>Локальный запуск решения:</i></strong> </summary>
-    
-    - В Visual Studio Code через терминал последовательно выполните следующие команды:
+<details>
+  <summary> <strong><i>Локальный запуск решения:</i></strong> </summary>
+  
+  - В Visual Studio Code через терминал последовательно выполните следующие команды:
 
-    - 1. Склонируйте репозиторий:
+  - 1. Склонируйте репозиторий:
 
-    ```
-    git clone https://github.com/megamen-x/T-Nexus.git
-    ```
+  ```
+  git clone https://github.com/megamen-x/T-Nexus.git
+  ```
 
-    - 2. Создайте окружение и установите зависимости проекта:
+  - 2. Создайте окружение и установите зависимости проекта:
 
-    ```
-    python -m venv .venv
-    source .venv/bin/activate
-    pip install -e .
-    ```
+  ```
+  python -m venv .venv
+  source .venv/bin/activate
+  pip install -e .
+  ```
 
-    - 3. Скопируйте содержимое файла .env.sample в файл .env 
-    - 4. Настройте доступ к хосту LLM-модели:
-    
-    ```
-    OPENAI_BASE_URL=https://host.llm/api
-    OPENAI_API_KEY=openai_api_key
-    ```
+  - 3. Скопируйте содержимое файла .env.sample в файл .env 
+  - 4. Настройте доступ к хосту LLM-модели:
+  
+  ```
+  OPENAI_BASE_URL=https://host.llm/api
+  OPENAI_API_KEY=openai_api_key
+  ```
 
-    - 5. Добавьте ключ Telegram-бота:
-    
-    ```
-    BOT_TOKEN=telegram_bot_token
-    ```
+  - 5. Добавьте ключ Telegram-бота:
+  
+  ```
+  BOT_TOKEN=telegram_bot_token
+  ```
 
-    - 6. После окончания предыдущих этапов можно запустить сервер:
-    
-    ```
-    uvicorn src.app.main:app --reload --host localhost --port 8000
-    ```
+  - 6. После окончания предыдущих этапов можно запустить сервер:
+  
+  ```
+  uvicorn src.app.main:app --reload --host localhost --port 8000
+  ```
 
-  </details> 
+</details> 
 
 </br> 
 
