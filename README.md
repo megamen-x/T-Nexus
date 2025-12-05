@@ -1,5 +1,6 @@
 <a name="readme-top"></a>  
-<img width="100%" src="https://github.com/megamen-x/T-Nexus/blob/main/assets/t_nexus_banner.png" alt="megamen banner">
+<!-- <img width="100%" src="https://github.com/megamen-x/T-Nexus/blob/main/assets/t_nexus_banner.png" alt="megamen banner"> -->
+<img width="100%" src="https://github.com/megamen-x/T-Nexus/blob/html_testing/assets/t_nexus_arch.png" alt="megamen banner">
 <div align="center">
   <p align="center">
   </p>
@@ -41,12 +42,15 @@
 https://drive.google.com/file/d/1FX3fw95I25ZXZTsWsgpcxJiVebxllx5g/view?usp=sharing 
 
 Распределение данных:
-<img width="100%" src="https://github.com/megamen-x/T-Nexus/blob/main/assets/t_nexus_data.png" alt="t-nexus dataset">
+
+<!-- <img width="100%" src="https://github.com/megamen-x/T-Nexus/blob/main/assets/t_nexus_data.png" alt="t-nexus dataset"> -->
+<img width="100%" src="https://github.com/megamen-x/T-Nexus/blob/html_testing/assets/t_nexus_data.png" alt="t-nexus dataset">
 
 
 **Архитектура сервиса:**
 
-<img width="100%" src="https://github.com/megamen-x/T-Nexus/blob/main/assets/t_nexus_arch.png" alt="t-nexus architecture">
+<!-- <img width="100%" src="https://github.com/megamen-x/T-Nexus/blob/main/assets/t_nexus_arch.png" alt="t-nexus architecture"> -->
+<img width="100%" src="https://github.com/megamen-x/T-Nexus/blob/html_testing/assets/t_nexus_arch.png" alt="t-nexus architecture">
 
 **Machine Learning:**
 
