@@ -1,6 +1,6 @@
 <a name="readme-top"></a>  
 <!-- <img width="100%" src="https://github.com/megamen-x/T-Nexus/blob/main/assets/t_nexus_banner.png" alt="megamen banner"> -->
-<img width="100%" src="https://github.com/megamen-x/T-Nexus/blob/html_testing/assets/t_nexus_arch.png" alt="megamen banner">
+<img width="100%" src="https://github.com/megamen-x/T-Nexus/blob/html_testing/assets/t_nexus_banner.png" alt="megamen banner">
 <div align="center">
   <p align="center">
   </p>
