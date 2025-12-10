@@ -1,0 +1,51 @@
+llm:
+  model: deepseek-chat
+  base_url: https://api.deepseek.com
+  api_key: "your-api-key"
+  temperature: 0.0
+  max_output_tokens: 1024
+
+embeddings:
+  model: deepvk/USER-bge-m3
+  base_url: http://localhost:8888
+  api_key: your_key_here
+  batch_size: 32
+  normalize_embeddings: true
+
+vector_store:
+  backend: qdrant
+  collection_prefix: hipporag_bge
+  url: http://localhost:6333
+  dim: 1024
+  namespaces:
+    passages: hipporag_passages
+    entities: hipporag_entities
+    facts: hipporag_facts
+
+neo4j:
+  uri: bolt://localhost:7687
+  user: neo4j
+  # database: testing_hippo
+  password: Lhfrjy2003P_101
+  graph_projection: hipporag_graph
+
+rabbitmq:
+  enabled: false
+  url: amqp://guest:guest@localhost:5672/%2F
+  exchange: hipporag
+  routing_key_indexed: hipporag.documents.indexed
+  routing_key_deleted: hipporag.documents.deleted
+
+conversation:
+  mode: last_message
+  max_messages: 20
+
+retrieval:
+  top_k: 5
+  fact_top_k: 5
+  damping: 0.5
+  passage_weight: 0.05
+  synonym_top_k: 2047
+  synonym_threshold: 0.8
+  engine: networkx
+

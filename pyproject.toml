@@ -3,12 +3,27 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "T-Nexus"
-version = "0.0.1"
+name = "t-nexus"
+version = "0.1.0"
 description = ""
 requires-python = ">=3.10"
 dependencies = [
-
+    "torch",
+    "nx-cugraph-cu12",
+    "optimum==1.27.0",
+    "transformers==4.48.0",
+    "numpy>2",
+    "openai>=1.60.1",
+    "pika>=1.3.2",
+    "pyyaml>=6.0.2",
+    "neo4j>=5.27.0",
+    "qdrant-client>=1.12.0",
+    # "pymilvus>=2.5.4",
+    "networkx>=3.1",
+    "fastapi",
+    "uvicorn",
+    "docling",
+    "tenacity>=8.2.2",
 ]
 
 [tool.setuptools.packages.find]
@@ -39,3 +54,10 @@ lines-after-imports = 2
 known-first-party = [
   "t-nexus"
 ]
+
+[tool.uv.workspace]
+members = [
+    "T-Nexus",
+]
+
+# pip install nx-cugraph-cu12 --extra-index-url https://pypi.nvidia.com
