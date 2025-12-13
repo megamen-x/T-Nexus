@@ -36,6 +36,9 @@ parser.add_argument('--response_format_field', type=str, default=None, help='Fie
 # parser.add_argument('--log_to_file_or_no', type=bool, default=False, help='')
 args = parser.parse_args()
 
+if not args.api_key:
+    raise ValueError("API key not provided. Use --api_key or set OPENAI_API_KEY environment variable.")
+
 client = AsyncOpenAI(
     api_key=args.api_key,
     base_url=args.base_url
@@ -96,7 +99,12 @@ async def generate(row):
     messages = build_messages(row, args.system_field, args.user_field)
     async with semaphore:
         try:
-            response_format = {"type": "text"} if args.response_format_field is None else row[args.response_format_field]
+            if args.response_format_field is None:
+                response_format = {"type": "text"}
+            else:
+                rf = row[args.response_format_field]
+                response_format = json.loads(rf) if isinstance(rf, str) else rf
+
             content = await _generate_with_retry(
                 client=client,
                 messages=messages,
@@ -124,11 +132,12 @@ async def generate(row):
 
 async def main():
     df = pd.read_json(args.input_file, lines=True)
-    if args.system_field not in df or args.user_field not in df:
-        raise ValueError(f'Файл с запросами должен содержать колонки {args.prompt_field} и {args.id_field}!')
-
-    if args.response_format_field is not None and args.response_format_field not in df:
-        raise ValueError()
+    if args.system_field is not None and args.system_field not in df.columns:
+        raise ValueError(f'Column "{args.system_field}" not found in input file!')
+    if args.user_field not in df.columns:
+        raise ValueError(f'Column "{args.user_field}" not found in input file!')
+    if args.response_format_field is not None and args.response_format_field not in df.columns:
+        raise ValueError(f'Column "{args.response_format_field}" not found in input file!')
 
     tasks = [generate(row) for _, row in df.iterrows()]
     for f in tqdm(asyncio.as_completed(tasks), total=len(tasks)):
