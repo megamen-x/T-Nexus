@@ -7,16 +7,22 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import sys
 import time
+from pathlib import Path
 
-from src.ml.hipporag import ChatHistory, HippoRAG
-from src.ml.utils.document_converter import collect_texts
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from src.t_nexus.ml.hipporag import ChatHistory, HippoRAG
+from src.t_nexus.ml.utils.document_converter import collect_texts
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run a HippoRAG performance smoke test.")
     parser.add_argument(
         "--config",
-        default="src/ml/config/hipporag.yaml",
+        default="src/t_nexus/ml/config/hipporag.yaml",
         help="Path to the HippoRAG YAML config.",
     )
     parser.add_argument(
