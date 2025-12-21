@@ -11,6 +11,7 @@ import numpy as np
 
 
 _WHITESPACE_RGX = re.compile(r"\s+")
+_HEADING_RGX = re.compile(r"^#{1,3}\s+", re.MULTILINE)
 
 
 def normalize_text(value: str) -> str:

@@ -15,13 +15,14 @@ from typing import Dict, Optional
 class LLMSettings:
     """LLM invocation parameters."""
 
-    model: str = "gpt-4o-mini"
+    model: str = "gpt-5-mini"
     base_url: Optional[str] = None
     api_key: Optional[str] = None
     temperature: float = 0.0
     max_output_tokens: int = 512
     prompt_name: str = "rag_qa_musique"
     response_format: str = "json_object"
+    requests_per_minute: int | None = None
 
 
 @dataclass

@@ -15,6 +15,8 @@ from docling.document_converter import (
 )
 from docling.pipeline.vlm_pipeline import VlmPipeline
 
+from src.t_nexus.ml.utils.data import DocumentSource
+
 
 # --------------------------------------------------------------------------- #
 # === Converter configuration =============================================== #
@@ -66,7 +68,7 @@ _TABLE_FORMATS = {InputFormat.CSV, InputFormat.XLSX}
 # --------------------------------------------------------------------------- #
 # === Core public API ======================================================= #
 # --------------------------------------------------------------------------- #
-def collect_texts(paths: Iterable[Union[str, os.PathLike]]) -> List[str]:
+def collect_texts(paths: Iterable[Union[str, os.PathLike]]) -> List[DocumentSource]:
     """
     Recursively walks through the supplied *paths* and returns a flat list
     of strings in the format
@@ -76,7 +78,7 @@ def collect_texts(paths: Iterable[Union[str, os.PathLike]]) -> List[str]:
     :param paths: Iterable with file or directory paths.
     :return:      List with extracted texts (can be empty).
     """
-    bucket: List[str] = []
+    bucket: List[DocumentSource] = []
 
     for root in map(pathlib.Path, paths):
         if root.is_file():
@@ -110,7 +112,7 @@ def extract_table_rows(table_item):
         rows.append(row_texts)
     return rows
 
-def _handle_file(path: pathlib.Path, bucket: List[str]) -> None:
+def _handle_file(path: pathlib.Path, bucket: List[DocumentSource]) -> None:
     """
     Converts *path* with docling and appends the result(s) to *bucket*
     if the extension is supported.
@@ -118,6 +120,16 @@ def _handle_file(path: pathlib.Path, bucket: List[str]) -> None:
     :param path:   Concrete file path.
     :param bucket: Mutable list used as an output accumulator.
     """
+    ext = path.suffix.lower().lstrip(".")
+    if ext == "txt":
+        try:
+            text = path.read_text(encoding="utf-8").strip()
+        except UnicodeDecodeError:
+            text = path.read_text(encoding="latin-1").strip()
+        if text:
+            bucket.append(DocumentSource(text=text, source=str(path)))
+        return
+
     try:
         result = CONVERTER.convert(path)
     except Exception as exc:
@@ -125,15 +137,16 @@ def _handle_file(path: pathlib.Path, bucket: List[str]) -> None:
         return
 
     doc = result.document
-    ext = path.suffix.lstrip(".")
 
-    if path.suffix.lower()[1:] in _TABLE_FORMATS:
+    if ext in _TABLE_FORMATS:
         for table in doc.tables:
             table_rows = extract_table_rows(table)
             for idx, row in enumerate(table_rows[1:], start=1):
                 row_text = " ".join(str(cell).strip() for cell in row if cell and str(cell).strip())
-                bucket.append(f"{path.stem}_{idx}.{ext}#@${row_text}")
+                if not row_text:
+                    continue
+                bucket.append(DocumentSource(text=row_text, source=str(path)))
     else:
         text = doc.export_to_text().strip()
         if text:
-            bucket.append(f"{str(path)}#@${text}")
+            bucket.append(DocumentSource(text=text, source=str(path)))

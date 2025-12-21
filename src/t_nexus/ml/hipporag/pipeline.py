@@ -233,7 +233,6 @@ class HippoRAG:
         """
         logger.info("Indexing %d documents", len(documents))
         chunks = self._chunk_documents(documents)
-
         existing_chunk_ids = set(self.manifest.keys())
         new_chunks = [chunk for chunk in chunks if chunk.chunk_id not in existing_chunk_ids]
 
