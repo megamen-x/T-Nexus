@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Dict, List, Literal, Optional, Sequence, Tuple
 
 import numpy as np
-from tqdm import tqdm
 import logging
 
 from src.t_nexus.ml.config import load_settings
@@ -145,17 +144,7 @@ class HippoRAG:
                 chunks.append(DocumentChunk(chunk_id=chunk_id, text=text, source_id=doc_id, metadata=metadata))
         return chunks
 
-    async def _extract_async(self, chunks: List[DocumentChunk]) -> List[ExtractionOutput]:
-        """
-        Run the OpenIE extractor for every chunk asynchronously.
-        """
-        if not chunks:
-            return []
-        return await self._run_in_executor(
-            partial(self.openie.process_chunks, chunks, self.settings.retrieval.fact_top_k or None)
-        )
-
-    async def _encode_query_async(self, query: str, target: Literal["fact", "passage"]) -> np.ndarray:
+    async def _encode_query(self, query: str, target: Literal["fact", "passage"]) -> np.ndarray:
         cache = self.query_embeddings[target]
         if query in cache:
             return cache[query]
@@ -164,32 +153,11 @@ class HippoRAG:
             "query_to_fact" if target == "fact" else "query_to_passage"
         )
         text = f"{instruction}\n\n{query}"
-        embeddings = await self._run_in_executor(self.embedding_model.embed, [text])
+        embeddings = await self.embedding_model.embed([text])
         embedding = embeddings[0]
         cache[query] = embedding
         return embedding
 
-    async def _embed_records_async(self, texts: List[str]) -> np.ndarray:
-        """
-        Encode text lists using the embedding model asynchronously.
-        """
-        if not texts:
-            return np.empty((0, self.settings.embeddings.dim))
-        return await self._run_in_executor(self.embedding_model.embed, texts)
-
-    def _embed_records(
-        self, texts: List[str]
-    ) -> np.ndarray:
-        """Encode texts into embeddings."""
-        if not texts:
-            return np.empty((0, self.settings.embeddings.dim))
-        batch_size = max(1, self.settings.embeddings.batch_size)
-        chunks = []
-        for start in tqdm(range(0, len(texts), batch_size), desc="Encoding texts"):
-            chunk = texts[start : start + batch_size]
-            chunk_embeddings = self.embedding_model.embed(chunk)
-            chunks.append(chunk_embeddings)
-        return np.vstack(chunks)
 
     def _prepare_entity_records(
         self, extractions: List[ExtractionOutput]
@@ -240,11 +208,11 @@ class HippoRAG:
             logger.info("All chunks already indexed, nothing to do.")
             return []
 
-        extractions = await self._extract_async(new_chunks)
+        extractions = await self.openie.process_chunks(new_chunks)
         chunk_ids = [chunk.chunk.chunk_id for chunk in extractions]
 
         passage_texts = [result.chunk.text for result in extractions]
-        passage_embeddings = await self._embed_records_async(passage_texts)
+        passage_embeddings = await self.embedding_model.embed(passage_texts)
         passage_records = [
             VectorRecord(
                 record_id=result.chunk.chunk_id,
@@ -257,7 +225,7 @@ class HippoRAG:
         self.passage_store.upsert(passage_records)
 
         entity_ids, entity_texts = self._prepare_entity_records(extractions)
-        entity_embeddings = await self._embed_records_async(entity_texts)
+        entity_embeddings = await self.embedding_model.embed(entity_texts)
         entity_records = [
             VectorRecord(record_id=entity_ids[idx], vector=entity_embeddings[idx], text=entity_texts[idx])
             for idx in range(len(entity_ids))
@@ -266,7 +234,7 @@ class HippoRAG:
             self.entity_store.upsert(entity_records)
 
         fact_ids, fact_texts = self._prepare_fact_records(extractions)
-        fact_embeddings = await self._embed_records_async(fact_texts)
+        fact_embeddings = await self.embedding_model.embed(fact_texts)
         fact_records = [
             VectorRecord(record_id=fact_ids[idx], vector=fact_embeddings[idx], text=fact_texts[idx])
             for idx in range(len(fact_ids))
@@ -401,8 +369,8 @@ class HippoRAG:
         """
         logger.info("Retrieving for query with mode=%s", mode or self.settings.conversation.mode)
         bundle = self.conversation_reducer.build_query(history, override_mode=mode)
-        fact_vector = await self._encode_query_async(bundle.question, "fact")
-        passage_vector = await self._encode_query_async(bundle.question, "passage")
+        fact_vector = await self._encode_query(bundle.question, "fact")
+        passage_vector = await self._encode_query(bundle.question, "passage")
 
         top_k = top_k or self.settings.retrieval.top_k
         fact_hits_future = self._run_in_executor(
@@ -458,7 +426,7 @@ class HippoRAG:
         if not self.prompt_manager.is_template_name_valid(template_name):
             template_name = "rag_qa_musique"
         messages = self.prompt_manager.render(template_name, prompt_user=prompt_user)
-        response, _ = await self._run_in_executor(self.llm.generate, messages)
+        response, _ = await self.llm.generate(messages)
         return response
 
     async def rag(self, history: ChatHistory, *, top_k: Optional[int] = None) -> Tuple[str, RetrievalResult]:

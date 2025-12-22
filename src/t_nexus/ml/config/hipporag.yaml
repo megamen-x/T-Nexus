@@ -2,9 +2,9 @@ llm:
   model: deepseek-chat
   base_url: https://api.deepseek.com
   requests_per_minute: 30
-  api_key: your_key
+  api_key: your_api_key
   temperature: 0.0
-  max_output_tokens: 1024
+  max_output_tokens: 8192
 
 embeddings:
   model: deepvk/USER-bge-m3

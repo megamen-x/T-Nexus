@@ -4,9 +4,8 @@ LLM-oriented helper utilities (prompt conversions, JSON fixes, etc.).
 
 from __future__ import annotations
 
-import json
 import re
-from typing import List, Sequence, Optional
+from typing import List, Sequence
 
 
 def convert_format_to_template(
@@ -44,18 +43,3 @@ def filter_invalid_triples(triples: Sequence[Sequence[str]]) -> List[List[str]]:
             seen.add(normalized)
             valid.append(list(normalized))
     return valid
-
-
-def extract_json_field(response: str, field: str) -> Optional[list]:
-    """
-    Extract a JSON list stored under *field* within a possibly noisy response.
-    Returns None if the payload cannot be parsed.
-    """
-    json_match = re.search(r"\{.*\}", response, flags=re.DOTALL)
-    if not json_match:
-        return None
-    try:
-        payload = json.loads(json_match.group())
-    except json.JSONDecodeError:
-        return None
-    return payload.get(field, [])

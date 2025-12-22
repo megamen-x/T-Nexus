@@ -35,4 +35,4 @@ def load_settings(path: str | os.PathLike[str]) -> HippoRAGSettings:
     :return: Configured :class:`HippoRAGSettings`.
     """
     raw = _read_yaml(Path(path))
-    return HippoRAGSettings.from_dict(raw)
+    return HippoRAGSettings(**raw)

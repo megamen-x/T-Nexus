@@ -20,7 +20,7 @@ class BaseEmbeddingModel(ABC):
         self.settings = settings
 
     @abstractmethod
-    def embed(self, texts: List[str]) -> np.ndarray:
+    async def embed(self, texts: List[str]) -> np.ndarray:
         """
         Encode the provided texts into embedding vectors.
 
@@ -28,8 +28,9 @@ class BaseEmbeddingModel(ABC):
         :return: 2-D array ``(len(texts), dim)``.
         """
 
-    def embed_one(self, text: str) -> np.ndarray:
+    async def embed_one(self, text: str) -> np.ndarray:
         """
         Convenience helper to encode a single string.
         """
-        return self.embed([text])[0]
+        embeddings = await self.embed([text])
+        return embeddings[0]

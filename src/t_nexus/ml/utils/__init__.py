@@ -12,8 +12,9 @@ from src.t_nexus.ml.utils.data import (
     DocumentSource
 )
 from src.t_nexus.ml.utils.hashing import compute_uuid5
-from src.t_nexus.ml.utils.llm import extract_json_field, filter_invalid_triples
+from src.t_nexus.ml.utils.llm import filter_invalid_triples
 from src.t_nexus.ml.utils.text import chunk_text, min_max_normalize, normalize_text
+from src.t_nexus.ml.utils.rate_limiter import AsyncRateLimiter
 
 __all__ = [
     "DocumentChunk",
@@ -24,9 +25,9 @@ __all__ = [
     "TripleRecord",
     "chunk_text",
     "compute_uuid5",
-    "extract_json_field",
     "filter_invalid_triples",
     "min_max_normalize",
     "normalize_text",
-    "DocumentSource"
+    "DocumentSource",
+    "AsyncRateLimiter"
 ]

@@ -10,6 +10,10 @@ from typing import Dict, List, Tuple
 from src.t_nexus.ml.config.schema import LLMSettings
 
 
+class JSONParseError(ValueError):
+    """Raised when an LLM response cannot be parsed as JSON."""
+
+
 class BaseLLM(ABC):
     """Abstract helper for invoking chat models."""
 
@@ -18,7 +22,7 @@ class BaseLLM(ABC):
         self.settings = settings
 
     @abstractmethod
-    def generate(self, messages: List[Dict[str, str]], **kwargs) -> Tuple[str, Dict]:
+    async def generate(self, messages: List[Dict[str, str]], **kwargs) -> Tuple[str, Dict]:
         """
         Run the chat completion call.
 

@@ -7,57 +7,74 @@ have to touch YAML or dictionaries directly.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from typing import Dict, Optional
+from pydantic import BaseModel, Field
 
 
-@dataclass
-class LLMSettings:
-    """LLM invocation parameters."""
-
-    model: str = "gpt-5-mini"
-    base_url: Optional[str] = None
-    api_key: Optional[str] = None
+class LLMSettings(BaseModel):
+    """Extended LLM settings with all controls."""
+    
+    api_key: str
+    base_url: str | None = None
+    model: str = "gpt-4"
     temperature: float = 0.0
-    max_output_tokens: int = 512
-    prompt_name: str = "rag_qa_musique"
+    max_output_tokens: int = 4096
     response_format: str = "json_object"
-    requests_per_minute: int | None = None
+    
+    requests_per_minute: int = Field(default=60, ge=0)
+    tokens_per_minute: int = Field(default=0, ge=0)
+    max_concurrent: int = Field(default=10, ge=1, le=100)
+    
+    request_timeout: float = Field(default=120.0, ge=1.0)
+    connect_timeout: float = Field(default=10.0, ge=1.0)
+    
+    max_retries: int = Field(default=3, ge=0, le=10)
+    retry_min_wait: float = Field(default=1.0, ge=0.1)
+    retry_max_wait: float = Field(default=30.0, ge=1.0)
 
 
-@dataclass
-class EmbeddingSettings:
+class EmbeddingSettings(BaseModel):
     """Embedding backend configuration."""
-
+    
     model: str = "text-embedding-3-small"
-    dim: int = 1536
-    base_url: Optional[str] = None
-    api_key: Optional[str] = None
-    batch_size: int = 16
+    dim: int = Field(default=1536, ge=1)
+    base_url: str | None = None
+    api_key: str | None = None
+    batch_size: int = Field(default=16, ge=1)
     normalize_embeddings: bool = True
 
+    requests_per_minute: int = Field(default=0, ge=0)
+    max_concurrent: int = Field(default=20, ge=1)
+    request_timeout: float = Field(default=60.0, ge=1.0)
 
-@dataclass
-class VectorStoreSettings:
-    """Descriptor for the vector database factory."""
+    max_retries: int = Field(default=3, ge=0)
+    retry_min_wait: float = Field(default=1.0, ge=0.1)
+    retry_max_wait: float = Field(default=30.0, ge=1.0)
 
+    model_config = {"extra": "forbid"}
+
+
+class VectorStoreSettings(BaseModel):
+    """Vector database configuration."""
+    
     backend: str = "memory"
     collection_prefix: str = "hipporag"
     url: str = "url"
-    dim: int = 1536
+    dim: int = Field(default=1536, ge=1)
     recreate: bool = False
-    namespaces: Dict[str, str] = field(
+    namespaces: Dict[str, str] = Field(
         default_factory=lambda: {
             "passages": "hipporag_passages",
             "entities": "hipporag_entities",
             "facts": "hipporag_facts",
         }
     )
-    connection: Dict[str, str] = field(default_factory=dict)
+    connection: Dict[str, str] = Field(default_factory=dict)
+
+    model_config = {"extra": "forbid"}
 
 
-@dataclass
-class Neo4jSettings:
+class Neo4jSettings(BaseModel):
     """Neo4j connection parameters and graph projection metadata."""
 
     uri: str = "bolt://localhost:7687"
@@ -69,8 +86,7 @@ class Neo4jSettings:
     create_constraints: bool = True
 
 
-@dataclass
-class RabbitMQSettings:
+class RabbitMQSettings(BaseModel):
     """RabbitMQ publication settings."""
 
     enabled: bool = False
@@ -81,16 +97,14 @@ class RabbitMQSettings:
     queue: str = "hipporag"
 
 
-@dataclass
-class ConversationSettings:
+class ConversationSettings(BaseModel):
     """Controls how chat histories are condensed into a retrieval query."""
 
     mode: str = "last_message"
     max_messages: int = 20
 
 
-@dataclass
-class RetrievalSettings:
+class RetrievalSettings(BaseModel):
     """Retrieval-loop knobs."""
 
     top_k: int = 5
@@ -103,42 +117,17 @@ class RetrievalSettings:
     engine: str = "neo4j"
 
 
-@dataclass
-class HippoRAGSettings:
+class HippoRAGSettings(BaseModel):
     """Aggregated settings tree consumed by :class:`HippoRAG`."""
 
-    llm: LLMSettings = field(default_factory=LLMSettings)
-    embeddings: EmbeddingSettings = field(default_factory=EmbeddingSettings)
-    vector_store: VectorStoreSettings = field(default_factory=VectorStoreSettings)
-    neo4j: Neo4jSettings = field(default_factory=Neo4jSettings)
-    rabbitmq: RabbitMQSettings = field(default_factory=RabbitMQSettings)
-    conversation: ConversationSettings = field(default_factory=ConversationSettings)
-    retrieval: RetrievalSettings = field(default_factory=RetrievalSettings)
-    prompts_path: Optional[str] = None
-    openie_mode: str = "online"
+    llm: LLMSettings
+    
+    embeddings: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
+    vector_store: VectorStoreSettings = Field(default_factory=VectorStoreSettings)
+    neo4j: Neo4jSettings = Field(default_factory=Neo4jSettings)
+    rabbitmq: RabbitMQSettings = Field(default_factory=RabbitMQSettings)
+    conversation: ConversationSettings = Field(default_factory=ConversationSettings)
+    retrieval: RetrievalSettings = Field(default_factory=RetrievalSettings)
+    
     dataset: str = "musique"
     save_dir: str = "hipporag_testing_dir"
-
-    @classmethod
-    def from_dict(cls, raw: Dict) -> "HippoRAGSettings":
-        """
-        Build a :class:`HippoRAGSettings` instance from a plain dictionary.
-
-        :param raw: Parsed YAML data.
-        """
-        def _build(sub_cls, key: str):
-            return sub_cls(**raw.get(key, {}))
-
-        return cls(
-            llm=_build(LLMSettings, "llm"),
-            embeddings=_build(EmbeddingSettings, "embeddings"),
-            vector_store=_build(VectorStoreSettings, "vector_store"),
-            neo4j=_build(Neo4jSettings, "neo4j"),
-            rabbitmq=_build(RabbitMQSettings, "rabbitmq"),
-            conversation=_build(ConversationSettings, "conversation"),
-            retrieval=_build(RetrievalSettings, "retrieval"),
-            prompts_path=raw.get("prompts_path"),
-            openie_mode=raw.get("openie_mode", "online"),
-            dataset=raw.get("dataset", "musique"),
-            save_dir=raw.get("save_dir", ".hipporag"),
-        )

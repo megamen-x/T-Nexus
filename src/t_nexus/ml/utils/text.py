@@ -23,7 +23,7 @@ def normalize_text(value: str) -> str:
     return re.sub(r"[^a-z0-9 ]+", " ", value.lower()).strip()
 
 
-def chunk_text(text: str, max_words: int = 300) -> List[str]:
+def chunk_text(text: str, max_words: int = 600) -> List[str]:
     """
     Split *text* into roughly-equal chunks limited by *max_words*.
     """

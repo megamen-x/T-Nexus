@@ -52,7 +52,7 @@ def main() -> None:
     )
 
     args = parser.parse_args()
-    documents = collect_texts(args.docs_file)
+    documents = collect_texts(args.docs_file)[:2]
     if not documents:
         raise SystemExit("Provide at least one document via --doc or --docs-file.")
 
@@ -76,7 +76,6 @@ def main() -> None:
             else:
                 retrieval = await hipporag.retrieve(history, top_k=args.top_k, mode=args.chat_mode)
             retrieval_times.append(time.perf_counter() - start)
-            print(retrieval)
 
         avg_retrieval = sum(retrieval_times) / len(retrieval_times)
         print(f"Ran {args.iterations} retrieval iteration(s); avg time {avg_retrieval:.2f}s")
