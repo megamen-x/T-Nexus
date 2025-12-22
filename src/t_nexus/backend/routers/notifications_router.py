@@ -3,11 +3,11 @@ from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime, timedelta
 
-from backend.database import get_db
-from backend.models import Notification as NotificationModel
-from backend.schemas import NotificationResponse
-from backend.auth import get_current_user
-from backend.services.placeholder_data import get_notifications_placeholder
+from src.t_nexus.backend.database import get_db
+from src.t_nexus.backend.models import Notification as NotificationModel
+from src.t_nexus.backend.schemas import NotificationResponse
+from src.t_nexus.backend.auth import get_current_user
+from src.t_nexus.backend.services.placeholder_data import get_notifications_placeholder
 
 router = APIRouter(prefix="/api", tags=["Notifications"])
 

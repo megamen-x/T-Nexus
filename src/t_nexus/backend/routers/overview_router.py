@@ -3,11 +3,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta
 
-from backend.database import get_db
-from backend.models import Conversation, Feedback, Incident
-from backend.schemas import OverviewResponse
-from backend.auth import get_current_user
-from backend.services.placeholder_data import get_overview_placeholder
+from src.t_nexus.backend.database import get_db
+from src.t_nexus.backend.models import Conversation, Feedback, Incident
+from src.t_nexus.backend.schemas import OverviewResponse
+from src.t_nexus.backend.auth import get_current_user
+from src.t_nexus.backend.services.placeholder_data import get_overview_placeholder
 
 router = APIRouter(prefix="/api", tags=["Overview"])
 

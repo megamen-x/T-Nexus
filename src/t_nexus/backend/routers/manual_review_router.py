@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-from backend.database import get_db
-from backend.models import ManualReviewItem as ManualReviewModel
-from backend.schemas import ManualReviewItemResponse, ManualReviewUpdate
-from backend.auth import get_current_user
-from backend.services.placeholder_data import get_manual_review_placeholder
+from src.t_nexus.backend.database import get_db
+from src.t_nexus.backend.models import ManualReviewItem as ManualReviewModel
+from src.t_nexus.backend.schemas import ManualReviewItemResponse, ManualReviewUpdate
+from src.t_nexus.backend.auth import get_current_user
+from src.t_nexus.backend.services.placeholder_data import get_manual_review_placeholder
 
 router = APIRouter(prefix="/api", tags=["Manual Review"])
 

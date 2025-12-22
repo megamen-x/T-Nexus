@@ -8,8 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from backend.database import engine, Base
-from backend.routers import auth_router, overview_router, metrics_router, manual_review_router, notifications_router
+from src.t_nexus.backend.database import engine, Base
+from src.t_nexus.backend.routers import auth_router, overview_router, metrics_router, manual_review_router, notifications_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -62,11 +62,11 @@ async def health_check():
 
 @app.get("/api/bot/stats")
 async def bot_stats():
-    from backend.telegram.tg_database import TelegramDatabase
-    from backend.config import TG_DB_PATH
+    from src.t_nexus.backend.telegram.tg_database import TelegramDatabase
+    from src.t_nexus.backend.config import settings
     
     try:
-        db = TelegramDatabase(TG_DB_PATH)
+        db = TelegramDatabase(settings.TG_DB_PATH)
         return {
             "total_conversations": db.get_total_conversations(),
             "total_messages": db.get_total_messages(),

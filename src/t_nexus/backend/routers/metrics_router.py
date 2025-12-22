@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from backend.database import get_db
-from backend.models import LLMRequest, Feedback, RAGQuery, UserQuery
-from backend.schemas import MetricsResponse
-from backend.auth import get_current_user
-from backend.services.placeholder_data import get_metrics_placeholder
+from src.t_nexus.backend.database import get_db
+from src.t_nexus.backend.models import LLMRequest, Feedback, RAGQuery, UserQuery
+from src.t_nexus.backend.schemas import MetricsResponse
+from src.t_nexus.backend.auth import get_current_user
+from src.t_nexus.backend.services.placeholder_data import get_metrics_placeholder
 
 router = APIRouter(prefix="/api", tags=["Metrics"])
 

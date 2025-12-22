@@ -1,14 +1,20 @@
 import os
+from openai import AsyncOpenAI
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-SECRET_KEY = os.getenv("SECRET_KEY", "t-nexus-super-secret-key-change-in-production")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./tnexus.db")
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
+    SECRET_KEY: str = "t-nexus-super-secret-key-change-in-production"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8377171332:AAFuNVmTDyqpz1fRDdYU_szfVxs_NwOhe_4")
-RAG_URL = os.getenv("RAG_URL", "http://localhost:8001/")
-TRANSCRIPTION_URL = os.getenv("TRANSCRIPTION_URL", "http://localhost:8002/transcribe")
-TG_DB_PATH = os.getenv("TG_DB_PATH", "telegram_bot.db")
+    DATABASE_URL: str = "sqlite:///./tnexus.db"
+
+    BOT_TOKEN: str =  "8377171332:AAFuNVmTDyqpz1fRDdYU_szfVxs_NwOhe_4"
+    RAG_URL: str = "http://localhost:8001/"
+    TRANSCRIPTION_URL: str = "http://localhost:8002/transcribe"
+    TG_DB_PATH: str = "telegram_bot.db"
+
+settings = Settings()

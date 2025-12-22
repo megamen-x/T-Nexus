@@ -7,8 +7,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 import os
 
-from backend.database import get_db
-from backend.models import User
+from src.t_nexus.backend.database import get_db
+from src.t_nexus.backend.models import User
 
 SECRET_KEY = os.getenv("SECRET_KEY", "t-nexus-super-secret-key-change-in-production")
 ALGORITHM = "HS256"

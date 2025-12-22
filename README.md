@@ -115,7 +115,7 @@ https://drive.google.com/file/d/1FX3fw95I25ZXZTsWsgpcxJiVebxllx5g/view?usp=shari
   - 6. После окончания предыдущих этапов можно запустить сервер:
   
   ```
-  uvicorn src.app.main:app --reload --host localhost --port 8000
+  uvicorn src.t_nexus.main:app --reload --host localhost --port 8000
   ```
 
 </details> 

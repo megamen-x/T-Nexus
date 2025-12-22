@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from datetime import timedelta
 
-from backend.database import get_db
-from backend.models import User
-from backend.schemas import UserCreate, UserLogin, Token, UserResponse
-from backend.auth import get_password_hash, verify_password, create_access_token, get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
+from src.t_nexus.backend.database import get_db
+from src.t_nexus.backend.models import User
+from src.t_nexus.backend.schemas import UserCreate, UserLogin, Token, UserResponse
+from src.t_nexus.backend.auth import get_password_hash, verify_password, create_access_token, get_current_user, ACCESS_TOKEN_EXPIRE_MINUTES
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 

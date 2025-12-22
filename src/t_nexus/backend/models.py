@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
 
-from backend.database import Base
+from src.t_nexus.backend.database import Base
 
 class UserRole(str, enum.Enum):
     ADMIN = "admin"

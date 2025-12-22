@@ -1,1 +1,1 @@
-from backend.routers import auth_router, overview_router, metrics_router, manual_review_router, notifications_router
+from src.t_nexus.backend.routers import auth_router, overview_router, metrics_router, manual_review_router, notifications_router

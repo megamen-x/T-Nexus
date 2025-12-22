@@ -16,7 +16,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, InlineKeyboardButton, CallbackQuery, FSInputFile
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from backend.telegram.tg_database import TelegramDatabase
+from src.t_nexus.backend.telegram.tg_database import TelegramDatabase
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -395,11 +395,11 @@ def create_bot(
     rag_url: str = None,
     transcription_url: str = None
 ) -> TNexusBot:
-    from backend.config import BOT_TOKEN, TG_DB_PATH, RAG_URL, TRANSCRIPTION_URL
+    from src.t_nexus.backend.config import settings
     
     return TNexusBot(
-        bot_token=bot_token or BOT_TOKEN,
-        db_path=db_path or TG_DB_PATH,
-        rag_url=rag_url or RAG_URL,
-        transcription_url=transcription_url or TRANSCRIPTION_URL
+        bot_token=bot_token or settings.BOT_TOKEN,
+        db_path=db_path or settings.TG_DB_PATH,
+        rag_url=rag_url or settings.RAG_URL,
+        transcription_url=transcription_url or settings.TRANSCRIPTION_URL
     )

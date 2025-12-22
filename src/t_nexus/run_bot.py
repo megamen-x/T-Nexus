@@ -4,14 +4,14 @@ import asyncio
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from backend.telegram.bot import create_bot
-
+from src.t_nexus.backend.telegram.bot import create_bot
+from src.t_nexus.backend.config import settings
 
 def main():
-    bot_token = os.getenv("BOT_TOKEN")
-    rag_url = os.getenv("RAG_URL", "http://localhost:8001/")
-    transcription_url = os.getenv("TRANSCRIPTION_URL", "http://localhost:8002/transcribe")
-    db_path = os.getenv("TG_DB_PATH", "telegram_bot.db")
+    bot_token = settings.BOT_TOKEN
+    rag_url = settings.RAG_URL
+    transcription_url = settings.TRANSCRIPTION_URL
+    db_path = settings.TG_DB_PATH
 
     if not bot_token:
         print("Error: BOT_TOKEN environment variable is not set!")
