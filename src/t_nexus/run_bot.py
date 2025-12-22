@@ -4,7 +4,7 @@ import asyncio
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from src.t_nexus.backend.telegram.bot import create_bot
+from backend.telegram.bot import create_bot
 
 
 def main():

@@ -96,7 +96,7 @@ class TNexusBot:
 
     async def help_command(self, message: Message):
         help_text = (
-            "🤖 *T-Nexus Support Bot*\n\n"
+            "🤖 T-Nexus Support Bot\n\n"
             "Available commands:\n"
             "/start - Start a new conversation\n"
             "/help - Show this help message\n"
@@ -107,7 +107,7 @@ class TNexusBot:
             "• Send voice messages\n"
             "• Upload CSV/Excel files for batch processing"
         )
-        await message.reply(help_text)
+        await message.reply(help_text, parse_mode=None)
     
     async def answer_mode_command(self, message: Message):
         markup = self._answer_mode_kb.as_markup()
