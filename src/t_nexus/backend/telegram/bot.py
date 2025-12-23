@@ -269,7 +269,7 @@ class TNexusBot:
     async def _query_api(self, user_content: List[str]) -> tuple:
         question = {'question': user_content}
         async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(self.rag_url + 'request_processing/', json=question)
+            response = await client.post(self.rag_url + 'rag/request_processing/', json=question)
             response.raise_for_status()
             data = response.json()
             

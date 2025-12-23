@@ -4,6 +4,7 @@ RAG-backed endpoints used by the Telegram bot.
 
 from __future__ import annotations
 
+import json
 import os
 import zipfile
 import tempfile
@@ -17,7 +18,7 @@ from src.t_nexus.ml.hipporag import ChatHistory, HippoRAG
 from src.t_nexus.ml.utils.document_converter import collect_texts
 
 
-CONFIG_PATH = Path(__file__).resolve().parents[3] / "ml" / "config" / "hipporag.yaml"
+CONFIG_PATH = Path(__file__).resolve().parents[2] / "ml" / "config" / "hipporag.yaml"
 _hipporag = HippoRAG(str(CONFIG_PATH))
 
 router = APIRouter(prefix="/rag", tags=["RAG"])
@@ -35,7 +36,7 @@ class RAGResponse(BaseModel):
 
 @router.get("/get_database_name/")
 def get_database_name() -> dict:
-    return {"message": _hipporag.settings.save_dir}
+    return {"message": _hipporag.state_dir}
 
 
 @router.post("/index/")
@@ -81,14 +82,14 @@ async def request_processing(request: RAGRequest) -> RAGResponse:
         history = ChatHistory()
         history.add("user", question)
         answer, retrieval = await _hipporag.rag(history)
+        answer = json.loads(answer)
+        full_answers.append(answer['full_answer'])
+        short_answers.append(answer['short_answer'])
 
-        full_answers.append(answer)
-        short_answers.append(answer)
-
-        passage_sources = [
-            Path(p.source).name for p in retrieval.passages if p.source
+        sources = [
+            p.source for p in retrieval.passages if p.source
         ]
-        docs.append(list(dict.fromkeys(passage_sources)))
+        docs.append(sources)
 
     return RAGResponse(
         full_answer=full_answers,

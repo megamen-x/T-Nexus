@@ -21,7 +21,11 @@ dependencies = [
     "docling",
     "tenacity>=8.2.2",
     "sqlalchemy",
-    "aiogram"
+    "aiogram",
+    "pydantic[email]",
+    "python-jose",
+    "passlib",
+    "python-multipart"
 ]
 
 [tool.setuptools.packages.find]
