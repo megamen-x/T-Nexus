@@ -28,12 +28,12 @@ class TNexusBot:
     SUPPORTED_MODES = {"full", "short"}
     CSV_REQUIRED_COLUMN = "question"
 
-    GREETING_MESSAGE = "Hello! I'm T-Nexus Support Bot. How can I help you?"
-    ABOUT_MESSAGE = "T-Nexus - an intelligent support assistant"
+    GREETING_MESSAGE = "Здравствуйте! Я бот службы поддержки T-Nexus. Чем я могу вам помочь?"
+    ABOUT_MESSAGE = "T-Nexus - интеллектуальный помощник службы поддержки"
     PROCESSING_MESSAGE = "💬"
-    GENERAL_ERROR_MESSAGE = "Something went wrong. Please try again later."
-    UNSUPPORTED_TYPE_MESSAGE = "Error! This message type is not supported!"
-    API_RESPONSE_ERROR_MESSAGE = "Unable to receive a valid response from the server."
+    GENERAL_ERROR_MESSAGE = "Что-то пошло не так. Пожалуйста, попробуйте позже."
+    UNSUPPORTED_TYPE_MESSAGE = "Ошибка! Этот тип сообщения не поддерживается!"
+    API_RESPONSE_ERROR_MESSAGE = "Не удалось получить действительный ответ от сервера."
     
     FEEDBACK_CALLBACK_PREFIX = "feedback:"
     LIKE_CALLBACK_DATA = f"{FEEDBACK_CALLBACK_PREFIX}like"
@@ -69,8 +69,8 @@ class TNexusBot:
     def _build_answer_mode_keyboard(self) -> InlineKeyboardBuilder:
         builder = InlineKeyboardBuilder()
         builder.add(
-            InlineKeyboardButton(text="📜 Full answer",  callback_data=self.FULL_MODE_CALLBACK),
-            InlineKeyboardButton(text="✂️ Short answer", callback_data=self.SHORT_MODE_CALLBACK),
+            InlineKeyboardButton(text="📜 Полный ответ",  callback_data=self.FULL_MODE_CALLBACK),
+            InlineKeyboardButton(text="✂️ Краткий ответ", callback_data=self.SHORT_MODE_CALLBACK),
         )
         return builder
 
@@ -96,22 +96,22 @@ class TNexusBot:
 
     async def help_command(self, message: Message):
         help_text = (
-            "🤖 T-Nexus Support Bot\n\n"
-            "Available commands:\n"
-            "/start - Start a new conversation\n"
-            "/help - Show this help message\n"
-            "/answer_mode - Choose answer mode (full/short)\n"
-            "/indexing - Upload documents for indexing\n\n"
-            "You can also:\n"
-            "• Send text messages for questions\n"
-            "• Send voice messages\n"
-            "• Upload CSV/Excel files for batch processing"
+            "🤖 Бот поддержки T-Nexus\n\n"
+            "Доступные команды:\n"
+            "/start - Начать новый разговор\n"
+            "/help - Показать это справочное сообщение\n"
+            "/answer_mode - Выбрать режим ответа (полный/краткий)\n"
+            "/indexing - Загрузить документы для индексации\n\n"
+            "Вы также можете:\n"
+            "• Отправлять текстовые сообщения с вопросами\n"
+            "• Отправлять голосовые сообщения\n"
+            "• Загружать файлы CSV/Excel для пакетной обработки"
         )
         await message.reply(help_text, parse_mode=None)
     
     async def answer_mode_command(self, message: Message):
         markup = self._answer_mode_kb.as_markup()
-        await message.answer("Choose answer mode:", reply_markup=markup)
+        await message.answer("Выберите режим ответа:", reply_markup=markup)
 
     async def indexing_command(self, message: Message):
         user_id = message.from_user.id if message.from_user else None
@@ -130,10 +130,10 @@ class TNexusBot:
         self.user_states[user_id] = "waiting_for_zip"
 
         await message.reply(
-            text=f"Current database: {db_name}\n\n"
-            "Please send a ZIP file with documents for indexing.\n"
-            "If the filename matches the current database name, it will be updated.\n"
-            "Otherwise, a new database will be created.",
+            "Текущая база данных: {db_name}\n\n"
+            "Пожалуйста, пришлите ZIP-файл с документами для индексирования.\n"
+            "Если имя файла совпадает с именем текущей базы данных, она будет обновлена.\n"
+            "В противном случае будет создана новая база данных.",
             parse_mode=None
         )
         
