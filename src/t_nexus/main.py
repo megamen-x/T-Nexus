@@ -41,7 +41,7 @@ app.include_router(manual_review_router.router)
 app.include_router(notifications_router.router)
 app.include_router(rag_router.router)
 
-frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
+frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "t_nexus/frontend")
 
 @app.get("/")
 async def root():

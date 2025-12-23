@@ -2,12 +2,16 @@ import os
 import sys
 import asyncio
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+start_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, start_path)
 
 from src.t_nexus.backend.telegram.bot import create_bot
 from src.t_nexus.backend.config import settings
 
 def main():
+    print(start_path)
+    print(sys.path)
     bot_token = settings.BOT_TOKEN
     rag_url = settings.RAG_URL
     transcription_url = settings.TRANSCRIPTION_URL
