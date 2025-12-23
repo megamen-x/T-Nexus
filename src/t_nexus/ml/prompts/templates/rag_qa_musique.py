@@ -6,21 +6,13 @@ one_shot_rag_qa_docs = (
     """Wikipedia Title: Finding Nemo\nFinding Nemo Theatrical release poster Directed by Andrew Stanton Produced by Graham Walters Screenplay by Andrew Stanton Bob Peterson David Reynolds Story by Andrew Stanton Starring Albert Brooks Ellen DeGeneres Alexander Gould Willem Dafoe Music by Thomas Newman Cinematography Sharon Calahan Jeremy Lasky Edited by David Ian Salter Production company Walt Disney Pictures Pixar Animation Studios Distributed by Buena Vista Pictures Distribution Release date May 30, 2003 (2003 - 05 - 30) Running time 100 minutes Country United States Language English Budget $$94 million Box office $$940.3 million"""
 )
 
-
-one_shot_ircot_demo = (
-    f'{one_shot_rag_qa_docs}'
-    '\n\nQuestion: '
-    f"When was Neville A. Stanton's employer founded?"
-    '\nThought: '
-    f"The employer of Neville A. Stanton is University of Southampton. The University of Southampton was founded in 1862. So the answer is: 1862."
-    '\n\n'
-)
-
-
 rag_qa_system = (
-    'As an advanced reading comprehension assistant, your task is to analyze text passages and corresponding questions meticulously. '
+    'As an advanced reading comprehension assistant, your task is to analyze text passages and corresponding questions meticulously based provided documents. '
     'Your response start after "Thought: ", where you will methodically break down the reasoning process, illustrating how you arrive at conclusions. '
-    'Conclude with "Answer: " to present a concise, definitive response, devoid of additional elaborations.'
+    'After the reasoning, provide the final answer in JSON format with keys "full_answer" and "short_answer".\n'
+    'IMPORTANT RULES:\n'
+    '1. The values in "full_answer" and "short_answer" MUST be translated into Russian language.\n'
+    '2. If the provided documents do not contain the answer to the question, write "Нет ответа" in both "full_answer" and "short_answer".'
 )
 
 one_shot_rag_qa_input = (
@@ -33,8 +25,8 @@ one_shot_rag_qa_input = (
 one_shot_rag_qa_output = """
 EXAMPLE JSON OUTPUT:
 {
-    "full_answer": "The employer of Neville A. Stanton is University of Southampton. The University of Southampton was founded in 1862.",
-    "short_answer": "1862."
+    "full_answer": "Работодателем Невилла А. Стэнтона является университет Саутгемптона. Университет Саутгемптона был основан в 1862 году.",
+    "short_answer": "В 1862 году."
 }
 """
 

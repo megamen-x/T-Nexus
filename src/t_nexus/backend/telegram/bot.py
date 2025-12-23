@@ -43,11 +43,10 @@ class TNexusBot:
     SHORT_MODE_CALLBACK = f"{ANSWER_MODE_CALLBACK_PREFIX}short"
     
 
-    def __init__(self, bot_token: str, db_path: str, rag_url: str, transcription_url: str):
+    def __init__(self, bot_token: str, db_path: str, rag_url: str):
         logger.info("Initializing T-Nexus bot")
         self.db = TelegramDatabase(db_path)
         self.rag_url = rag_url
-        self.transcription_url = transcription_url
         
         self.bot = Bot(token=bot_token, default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN))
         self.dp = Dispatcher()
@@ -81,7 +80,6 @@ class TNexusBot:
         self.dp.message.register(self.indexing_command, Command("indexing"))
         
         self.dp.message.register(self._handle_text, F.text)
-        self.dp.message.register(self._handle_voice, F.voice)
         self.dp.message.register(self._handle_document, F.document)
         
         self.dp.callback_query.register(self._handle_feedback_callback, F.data.startswith(self.FEEDBACK_CALLBACK_PREFIX))
@@ -104,7 +102,6 @@ class TNexusBot:
             "/indexing - Загрузить документы для индексации\n\n"
             "Вы также можете:\n"
             "• Отправлять текстовые сообщения с вопросами\n"
-            "• Отправлять голосовые сообщения\n"
             "• Загружать файлы CSV/Excel для пакетной обработки"
         )
         await message.reply(help_text, parse_mode=None)
@@ -119,7 +116,7 @@ class TNexusBot:
             return
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
-                response = await client.get(self.rag_url + 'get_database_name/')
+                response = await client.get(self.rag_url + 'rag/get_database_name/')
                 response.raise_for_status()
                 data = response.json()
                 db_name = data.get("message", "Unknown")
@@ -146,19 +143,6 @@ class TNexusBot:
         if not message.text:
             return
         await self._process_content(message, message.text)
-    
-    async def _handle_voice(self, message: Message):
-        user_id = message.from_user.id if message.from_user else None
-
-        placeholder = await message.answer(f"🎤 Recognizing voice message...")
-        try:
-            transcribed_text = await self._transcribe_voice(message)
-            await placeholder.delete()
-            await self._process_content(message, transcribed_text)
-        except Exception as e:
-            logger.error(f"Error processing voice message for user {user_id}: {e}")
-            traceback.print_exc()
-            await placeholder.edit_text(f"Could not recognize speech: {e}")
 
     async def _handle_document(self, message: Message):
         user_id = message.from_user.id if message.from_user else None
@@ -173,7 +157,7 @@ class TNexusBot:
             await message.answer(self.UNSUPPORTED_TYPE_MESSAGE)
             return
 
-        placeholder = await message.answer(f"Processing file...")
+        placeholder = await message.answer(f"Обработка документов...")
         try:
             logger.debug(f"Sending batch processing request to API for user {user_id}")
             full_ans, short_ans, docs = await self._query_api(content)
@@ -206,11 +190,11 @@ class TNexusBot:
 
             mode = self.user_answer_mod.get(user_id, self.DEFAULT_ANSWER_MODE)
             answer_text = full_ans[0] if mode == "full" else short_ans[0]
-            docs_text = ", ".join(docs[0]) if docs and docs[0] else "No sources available"
+            docs_text = ", ".join(docs[0]) if docs and docs[0] else "Нет доступных документов"
             final_answer = (
                 f"{answer_text}\n"
                 f"===========================\n"
-                f"Documents:\n{docs_text}"
+                f"Документы:\n{docs_text}"
             )
 
             markup = self._likes_kb.as_markup()
@@ -243,7 +227,7 @@ class TNexusBot:
             message_id=message_id,
             reply_markup=None
         )
-        await callback.answer(f"Thank you for your feedback: {feedback}!")
+        await callback.answer(f"Спасибо за ваш отзыв: {feedback}!")
 
     async def _handle_answer_mode_callback(self, callback: CallbackQuery):
         if not callback.data:
@@ -260,11 +244,11 @@ class TNexusBot:
 
         text = "Full" if mode == 'full' else 'Short'
         await callback.message.edit_text(
-            text='Successfully changed mode to: ' + text,
+            text='Успешно изменен режим: ' + text,
             parse_mode=None,
             reply_markup=None
         )
-        await callback.answer(f"✅ Answer mode set to «{mode}»")
+        await callback.answer(f"✅ Режим ответов «{mode}»")
 
     async def _query_api(self, user_content: List[str]) -> tuple:
         question = {'question': user_content}
@@ -279,46 +263,13 @@ class TNexusBot:
 
             return data["full_answer"], data["short_answer"], data["docs"]
 
-    async def _transcribe_voice(self, message: Message) -> str:
-        if not message.voice:
-            return ""
-
-        user_id = message.from_user.id if message.from_user else None
-
-        try:
-            voice_file = await self.bot.get_file(message.voice.file_id)
-
-            voice_ogg_buffer = io.BytesIO()
-            await self.bot.download_file(voice_file.file_path, destination=voice_ogg_buffer)
-            voice_ogg_buffer.seek(0)
-
-            files = {
-                'file': ('voice.ogg', voice_ogg_buffer, 'audio/ogg')
-            }
-
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                response = await client.post(self.transcription_url, files=files)
-                response.raise_for_status()
-                data = response.json()
-                return data.get("transcription", "")
-
-        except httpx.HTTPStatusError as e:
-            logger.error(f"HTTP error during transcription for user {user_id}: {e.response.status_code} - {e.response.text}")
-            return "An error occurred while processing your message."
-        except httpx.RequestError as e:
-            logger.error(f"Network error during transcription for user {user_id}: {e}")
-            return "Transcription service is temporarily unavailable."
-        except Exception as e:
-            logger.error(f"Unknown error during transcription: {e}")
-            return "Something went wrong."
-
     async def _handle_zip_for_indexing(self, message: Message):
         file_name = message.document.file_name
         if not file_name or not file_name.lower().endswith('.zip'):
             await message.reply("Please send a file with .zip extension")
             return
             
-        placeholder = await message.reply("⏳ Sending file to server for indexing...")
+        placeholder = await message.reply("⏳ Отправка файла на сервер...")
         
         try:
             file_info = await self.bot.get_file(message.document.file_id)
@@ -327,10 +278,10 @@ class TNexusBot:
             files = {'file': (file_name, file_data, 'application/zip')}
             
             async with httpx.AsyncClient(timeout=3600.0) as client:
-                response = await client.post(self.rag_url + 'index/', files=files)
+                response = await client.post(self.rag_url + 'rag/index/', files=files)
                 response.raise_for_status()
                 result = response.json()
-                await placeholder.edit_text(f"✅ {result.get('message', 'Indexing completed successfully.')}")
+                await placeholder.edit_text(f"✅ {result.get('message', 'Индексация успешна.')}")
                 
         except httpx.HTTPStatusError as e:
             error_msg = f"Server error: {e.response.status_code}"
@@ -370,7 +321,7 @@ class TNexusBot:
             if file_extension == "csv":
                 df = pd.read_csv(tmp_path)
                 if self.CSV_REQUIRED_COLUMN not in [el.lower() for el in df.columns]:
-                    await message.reply(f"Error: CSV file is missing required column '{self.CSV_REQUIRED_COLUMN}'.")
+                    await message.reply(f"Ошибка: CSV файл не содержит необходимой колонки '{self.CSV_REQUIRED_COLUMN}'.")
                     return None
                 return df[self.CSV_REQUIRED_COLUMN].dropna().astype(str).to_list()
             
@@ -380,7 +331,7 @@ class TNexusBot:
 
         except Exception as e:
             logger.error(f"Error parsing document for user {user_id}: {e}")
-            await message.reply(f"Could not process file: {e}")
+            await message.reply(f"Не удалось обработать файл: {e}")
             return None
         finally:
             if os.path.exists(tmp_path):
@@ -393,7 +344,6 @@ def create_bot(
     bot_token: str = None,
     db_path: str = None,
     rag_url: str = None,
-    transcription_url: str = None
 ) -> TNexusBot:
     from src.t_nexus.backend.config import settings
     
@@ -401,5 +351,4 @@ def create_bot(
         bot_token=bot_token or settings.BOT_TOKEN,
         db_path=db_path or settings.TG_DB_PATH,
         rag_url=rag_url or settings.RAG_URL,
-        transcription_url=transcription_url or settings.TRANSCRIPTION_URL
     )

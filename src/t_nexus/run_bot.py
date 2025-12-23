@@ -14,7 +14,6 @@ def main():
     print(sys.path)
     bot_token = settings.BOT_TOKEN
     rag_url = settings.RAG_URL
-    transcription_url = settings.TRANSCRIPTION_URL
     db_path = settings.TG_DB_PATH
 
     if not bot_token:
@@ -25,14 +24,12 @@ def main():
 
     print("Starting T-Nexus Telegram Bot...")
     print(f"RAG URL: {rag_url}")
-    print(f"Transcription URL: {transcription_url}")
     print(f"Database path: {db_path}")
 
     bot = create_bot(
         bot_token=bot_token,
         db_path=db_path,
         rag_url=rag_url,
-        transcription_url=transcription_url
     )
 
     asyncio.run(bot.start_polling())

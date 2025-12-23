@@ -57,7 +57,7 @@ async def index_files(file: UploadFile = File(...)) -> dict:
 
             documents = collect_texts([Path(extract_dir)])
             if not documents:
-                return {"message": "No documents found inside the archive."}
+                return {"message": "Не найдены документы внутри архива."}
 
             chunk_ids = await _hipporag.index_documents(documents)
     finally:
@@ -66,7 +66,7 @@ async def index_files(file: UploadFile = File(...)) -> dict:
         except OSError:
             pass
 
-    return {"message": f"Indexed {len(chunk_ids)} chunks."}
+    return {"message": f"Проиндексировано {len(chunk_ids)} чанков."}
 
 
 @router.post("/request_processing/", response_model=RAGResponse)
@@ -85,11 +85,13 @@ async def request_processing(request: RAGRequest) -> RAGResponse:
         answer = json.loads(answer)
         full_answers.append(answer['full_answer'])
         short_answers.append(answer['short_answer'])
-
-        sources = [
-            p.source for p in retrieval.passages if p.source
-        ]
-        docs.append(sources)
+        if answer['short_answer'] != 'Нет ответа':
+            sources = [
+                p.source for p in retrieval.passages if p.source
+            ]
+            docs.append(sources)
+        else:
+            docs.append([])
 
     return RAGResponse(
         full_answer=full_answers,
