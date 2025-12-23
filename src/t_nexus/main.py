@@ -9,7 +9,14 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from src.t_nexus.backend.database import engine, Base
-from src.t_nexus.backend.routers import auth_router, overview_router, metrics_router, manual_review_router, notifications_router
+from src.t_nexus.backend.routers import (
+    auth_router,
+    overview_router,
+    metrics_router,
+    manual_review_router,
+    notifications_router,
+    rag_router,
+)
 
 Base.metadata.create_all(bind=engine)
 
@@ -32,6 +39,7 @@ app.include_router(overview_router.router)
 app.include_router(metrics_router.router)
 app.include_router(manual_review_router.router)
 app.include_router(notifications_router.router)
+app.include_router(rag_router.router)
 
 frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
 

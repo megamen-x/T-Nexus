@@ -53,16 +53,34 @@ class QueryBundle:
 
 
 @dataclass
+class PassageResult:
+    """Single passage retrieved for a query."""
+
+    text: str
+    score: float
+    metadata: Dict[str, str] = field(default_factory=dict)
+
+    @property
+    def source(self) -> str | None:
+        """Return the file path that contributed this passage, if available."""
+        return self.metadata.get("source")
+
+
+@dataclass
 class RetrievalResult:
     """Container returned by :meth:`HippoRAG.retrieve`."""
 
     query: QueryBundle
-    passages: List[str]
-    scores: List[float]
+    passages: List[PassageResult]
 
     def top_passages(self, limit: int) -> Iterable[str]:
         """Yield up to *limit* passages preserving ranking order."""
-        return self.passages[:limit]
+        return (passage.text for passage in self.passages[:limit])
+
+    @property
+    def scores(self) -> List[float]:
+        """Return all retrieval scores in ranking order."""
+        return [passage.score for passage in self.passages]
 
 
 @dataclass

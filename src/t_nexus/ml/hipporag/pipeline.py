@@ -33,6 +33,7 @@ from src.t_nexus.ml.utils import (
     DocumentSource,
     ExtractionOutput,
     GraphSeedWeights,
+    PassageResult,
     RetrievalResult,
     TripleRecord,
     chunk_text,
@@ -213,15 +214,18 @@ class HippoRAG:
 
         passage_texts = [result.chunk.text for result in extractions]
         passage_embeddings = await self.embedding_model.embed(passage_texts)
-        passage_records = [
-            VectorRecord(
-                record_id=result.chunk.chunk_id,
-                vector=passage_embeddings[idx],
-                text=result.chunk.text,
-                metadata={"source_id": result.chunk.source_id or ""},
+        passage_records = []
+        for idx, result in enumerate(extractions):
+            metadata = {"source_id": result.chunk.source_id or ""}
+            metadata.update({k: v for k, v in result.chunk.metadata.items() if v})
+            passage_records.append(
+                VectorRecord(
+                    record_id=result.chunk.chunk_id,
+                    vector=passage_embeddings[idx],
+                    text=result.chunk.text,
+                    metadata=metadata,
+                )
             )
-            for idx, result in enumerate(extractions)
-        ]
         self.passage_store.upsert(passage_records)
 
         entity_ids, entity_texts = self._prepare_entity_records(extractions)
@@ -270,6 +274,7 @@ class HippoRAG:
                 "facts": [
                     compute_uuid5(self._format_fact_text(triple)) for triple in result.triples
                 ],
+                "metadata": dict(result.chunk.metadata),
             }
             self.publisher.document_indexed(result.chunk.chunk_id, {"source_id": result.chunk.source_id})
 
@@ -379,8 +384,10 @@ class HippoRAG:
         passage_hits_future = self._run_in_executor(self.passage_store.query, passage_vector, top_k)
 
         fact_hits, passage_hits = await asyncio.gather(fact_hits_future, passage_hits_future)
-        passages = [hit.text for hit in passage_hits]
-        scores = [hit.score for hit in passage_hits]
+        fallback_passage_results = [
+            PassageResult(text=hit.text, score=hit.score, metadata=dict(hit.metadata or {}))
+            for hit in passage_hits
+        ]
 
         phrase_weights = self._build_phrase_weights(fact_hits)
         seed = GraphSeedWeights()
@@ -401,13 +408,17 @@ class HippoRAG:
         )
 
         if not pagerank_results:
-            logger.info("Falling back to dense DPR results (%d passages)", len(passages))
-            return RetrievalResult(query=bundle, passages=passages, scores=scores)
+            logger.info("Falling back to dense DPR results (%d passages)", len(fallback_passage_results))
+            return RetrievalResult(query=bundle, passages=fallback_passage_results)
 
-        passages = [row[2] for row in pagerank_results]
-        scores = [row[1] for row in pagerank_results]
-        logger.info("Retrieved %d passages via graph", len(passages))
-        return RetrievalResult(query=bundle, passages=passages, scores=scores)
+        graph_passages: List[PassageResult] = []
+        for node_id, score, text in pagerank_results:
+            entry = self.manifest.get(node_id, {})
+            metadata = dict(entry.get("metadata") or {})
+            graph_passages.append(PassageResult(text=text, score=score, metadata=metadata))
+
+        logger.info("Retrieved %d passages via graph", len(graph_passages))
+        return RetrievalResult(query=bundle, passages=graph_passages)
 
     # ------------------------------------------------------------------ #
     # QA
@@ -420,7 +431,9 @@ class HippoRAG:
         max_context = max_context or self.settings.retrieval.top_k
         prompt_user = ""
         for passage in retrieval.passages[:max_context]:
-            prompt_user += f"Wikipedia Title: {passage}\n\n"
+            # if passage.source:
+            #     prompt_user += f"Source: {Path(passage.source).name}\n"
+            prompt_user += f"Wikipedia Title: {passage.text}\n\n"
         prompt_user += f"Question: {retrieval.query.question}\nThought: "
         template_name = f"rag_qa_{self.settings.dataset}"
         if not self.prompt_manager.is_template_name_valid(template_name):

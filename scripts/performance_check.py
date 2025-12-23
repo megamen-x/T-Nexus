@@ -52,7 +52,7 @@ def main() -> None:
     )
 
     args = parser.parse_args()
-    documents = collect_texts(args.docs_file)[:2]
+    documents = collect_texts(args.docs_file)
     if not documents:
         raise SystemExit("Provide at least one document via --doc or --docs-file.")
 
@@ -79,6 +79,7 @@ def main() -> None:
 
         avg_retrieval = sum(retrieval_times) / len(retrieval_times)
         print(f"Ran {args.iterations} retrieval iteration(s); avg time {avg_retrieval:.2f}s")
+        print(retrieval)
         if args.qa and answers:
             print("Sample answer:", answers[-1])
 

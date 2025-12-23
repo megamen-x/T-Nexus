@@ -6,10 +6,11 @@ from src.t_nexus.ml.utils.data import (
     DocumentChunk,
     ExtractionOutput,
     GraphSeedWeights,
+    PassageResult,
     QueryBundle,
     RetrievalResult,
     TripleRecord,
-    DocumentSource
+    DocumentSource,
 )
 from src.t_nexus.ml.utils.hashing import compute_uuid5
 from src.t_nexus.ml.utils.llm import filter_invalid_triples
@@ -29,5 +30,6 @@ __all__ = [
     "min_max_normalize",
     "normalize_text",
     "DocumentSource",
+    "PassageResult",
     "AsyncRateLimiter"
 ]

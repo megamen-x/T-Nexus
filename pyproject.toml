@@ -20,6 +20,8 @@ dependencies = [
     "uvicorn",
     "docling",
     "tenacity>=8.2.2",
+    "sqlalchemy",
+    "aiogram"
 ]
 
 [tool.setuptools.packages.find]

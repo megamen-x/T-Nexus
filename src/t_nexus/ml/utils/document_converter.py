@@ -108,9 +108,10 @@ def extract_table_rows(table_item):
     for row_idx in row_indices:
         row_cells = [cell for cell in cells if cell.start_row_offset_idx == row_idx]
         row_cells.sort(key=lambda cell: cell.start_col_offset_idx)
-        row_texts = [cell.text for cell in row_cells if cell.text]
+        row_texts = [cell.text if cell.text else "" for cell in row_cells]
         rows.append(row_texts)
     return rows
+
 
 def _handle_file(path: pathlib.Path, bucket: List[DocumentSource]) -> None:
     """
@@ -141,11 +142,30 @@ def _handle_file(path: pathlib.Path, bucket: List[DocumentSource]) -> None:
     if ext in _TABLE_FORMATS:
         for table in doc.tables:
             table_rows = extract_table_rows(table)
-            for idx, row in enumerate(table_rows[1:], start=1):
-                row_text = " ".join(str(cell).strip() for cell in row if cell and str(cell).strip())
+            if not table_rows:
+                continue
+            headers = table_rows[0]
+            url_col_idx = None
+            for idx, header in enumerate(headers):
+                if header and header.strip().lower() == "url":
+                    url_col_idx = idx
+                    break
+            
+            for row in table_rows[1:]:
+                row_text = " ".join(
+                    str(cell).strip() 
+                    for idx, cell in enumerate(row) 
+                    if cell and str(cell).strip() and idx != url_col_idx
+                )
                 if not row_text:
                     continue
-                bucket.append(DocumentSource(text=row_text, source=str(path)))
+                source = str(path)
+                if url_col_idx is not None and url_col_idx < len(row):
+                    url_value = row[url_col_idx]
+                    if url_value and str(url_value).strip():
+                        source = str(url_value).strip()
+                
+                bucket.append(DocumentSource(text=row_text, source=source))
     else:
         text = doc.export_to_text().strip()
         if text:
