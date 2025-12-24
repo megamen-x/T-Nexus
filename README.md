@@ -17,11 +17,11 @@
 </div>
 
 **Содержание:**
-- [Проблематика задачи](#title1)
-- [Описание решения](#title2)
-- [Тестирование решения](#title3)
-- [Обновления](#title4)
-- [Команда](#title5)
+- [Проблематика задачи](#проблематика-задачи)
+- [Описание решения](#описание-решения)
+- [Тестирование решения](#тестирование-решения)
+- [Обновления](#обновления)
+- [Команда](#команда)
 
 ## <h3 align="start"><a id="title1">Проблематика задачи</a></h3> 
 В рамках курса "Введение в большие языковые модели" необходимо создать работающего бота-помощника. Функционал: генеративные ответы на текстовые запросы с указанием источников, а также админская дашборд-панель для мониторинга показателей.
@@ -98,7 +98,7 @@ https://drive.google.com/file/d/1FX3fw95I25ZXZTsWsgpcxJiVebxllx5g/view?usp=shari
   pip install -e .
   ```
 
-  - 3. Скопируйте содержимое файла .env.sample в файл .env 
+  - 3. Скопируйте содержимое файла .env.example в файл .env 
   - 4. Настройте доступ к хосту LLM-модели:
   
   ```
@@ -119,6 +119,60 @@ https://drive.google.com/file/d/1FX3fw95I25ZXZTsWsgpcxJiVebxllx5g/view?usp=shari
   ```
 
 </details> 
+
+<details>
+
+<summary> <strong><i>Запуск решения при помощи docker compose:</i></strong> </summary>
+  
+  - Примечание:
+
+  Для корректной работы T-Nexus необходим Python 3.12, предпочтительная версия CUDA - 12.9. 
+
+  - В Visual Studio Code через терминал последовательно выполните следующие команды:
+
+  - 1. Склонируйте репозиторий:
+
+  ```
+  git clone https://github.com/megamen-x/T-Nexus.git
+  ```
+
+  - 2. Создайте окружение и установите зависимости проекта:
+
+  Linux/MacOS:
+  ```
+  python -m venv .venv
+  source .venv/bin/activate
+  pip install -e .
+  ```
+
+  Windows:
+  ```
+  python -m venv .venv
+  .venv\Scripts\activate.bat
+  pip install -e .
+  ```
+
+  - 3. Скопируйте содержимое файла .env.example в файл .env 
+  - 4. Настройте доступ к хосту LLM-модели:
+  
+  ```
+  OPENAI_BASE_URL=https://host.llm/api
+  OPENAI_API_KEY=openai_api_key
+  ```
+
+  - 5. Добавьте ключ Telegram-бота:
+  
+  ```
+  BOT_TOKEN=telegram_bot_token
+  ```
+
+  - 6. После окончания предыдущих этапов запустите сервер:
+  
+  ```
+  docker compose up
+  ```
+
+</details>
 
 </br> 
 
