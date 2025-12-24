@@ -8,15 +8,15 @@ llm:
 
 embeddings:
   model: deepvk/USER-bge-m3
-  base_url: http://localhost:8888
-  api_key: your_key_here
+  base_url: http://embedder:8888
+  api_key: your_api_key
   batch_size: 32
   normalize_embeddings: true
 
 vector_store:
   backend: qdrant
   collection_prefix: hipporag_bge
-  url: http://localhost:6333
+  url: http://qdrant:6333
   dim: 1024
   namespaces:
     passages: hipporag_passages
@@ -24,7 +24,7 @@ vector_store:
     facts: hipporag_facts
 
 neo4j:
-  uri: bolt://localhost:7687
+  uri: bolt://neo4j:7687
   user: neo4j
   # database: testing_hippo
   password: Lhfrjy2003P_101

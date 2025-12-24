@@ -1,0 +1,5 @@
+.github
+.venv
+assets
+
+docker

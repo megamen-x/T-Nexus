@@ -28,7 +28,7 @@ class QdrantVectorStore(VectorStore):
                 "qdrant-client is not installed. Install it to use the Qdrant backend."
             )
         super().__init__(collection, dim)
-        url = connection.get("url", "http://localhost:6333")
+        url = connection.get("url", "http://qdrant:6333")
         api_key = connection.get("api_key")
         prefer_grpc = connection.get("prefer_grpc", "false").lower() == "true"
         self.client = QdrantClient(url=url, api_key=api_key, prefer_grpc=prefer_grpc)

@@ -1,0 +1,93 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333" # HTTP API
+      - "6334:6334" # gRPC (optional)
+    volumes:
+      - qdrant_storage:/qdrant/storage
+  embedder:
+    build:
+      context: ./embedder_server
+      dockerfile: dockerfile
+    ports:
+      - "8888:8888"
+    environment:
+      - EMBEDDING_MODEL_NAME=deepvk/USER-bge-m3
+      - DEVICE=cuda
+      - ENGINE=torch
+    env_file:
+      - .env
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+    gpus: all
+    restart: unless-stopped
+    depends_on:
+      - qdrant
+
+  server:
+    build:
+      context: .
+      dockerfile: src/t_nexus/Dockerfile
+    image: t_nexus_server:0.1
+    ports:
+      - "8000:8000"
+    environment:
+      - EMBEDDER_URL=http://embedder:8888
+      - QDRANT_URL=http://qdrant:6333
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./:/app
+    depends_on:
+      qdrant:
+        condition: service_started
+      embedder:
+        condition: service_started
+      neo4j:
+        condition: service_started
+    restart: unless-stopped
+    command: >
+      sh -c "uvicorn src.t_nexus.main:app --reload --host 0.0.0.0 --port 8000"
+
+  neo4j:
+    image: neo4j:latest
+    volumes:  
+        - neo4j_logs:/logs
+        - neo4j_config:/config
+        - neo4j_data:/data
+        - neo4j_plugins:/plugins
+    environment:
+        - NEO4J_AUTH=neo4j/Lhfrjy2003P_101 
+        - NEO4J_PLUGINS='["graph-data-science"]'
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    restart: always
+
+  tg_bot:
+    image: t_nexus_server:0.1
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+    depends_on:
+      qdrant:
+        condition: service_started
+      embedder:
+        condition: service_started
+      neo4j:
+        condition: service_started
+      server:
+        condition: service_started
+      
+    restart: unless-stopped
+    command: >
+      sh -c "python ./src/t_nexus/run_bot.py"
+
+volumes:
+  qdrant_storage:
+  hf_cache:
+  neo4j_logs:
+  neo4j_config:
+  neo4j_data:
+  neo4j_plugins:
