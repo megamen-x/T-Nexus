@@ -135,38 +135,21 @@ https://drive.google.com/file/d/1FX3fw95I25ZXZTsWsgpcxJiVebxllx5g/view?usp=shari
   ```
   git clone https://github.com/megamen-x/T-Nexus.git
   ```
-
-  - 2. Создайте окружение и установите зависимости проекта:
-
-  Linux/MacOS:
-  ```
-  python -m venv .venv
-  source .venv/bin/activate
-  pip install -e .
-  ```
-
-  Windows:
-  ```
-  python -m venv .venv
-  .venv\Scripts\activate.bat
-  pip install -e .
-  ```
-
-  - 3. Скопируйте содержимое файла .env.example в файл .env 
-  - 4. Настройте доступ к хосту LLM-модели:
+  - 2. Скопируйте содержимое файла .env.example в файл .env 
+  - 3. Настройте доступ к хосту LLM-модели:
   
   ```
   OPENAI_BASE_URL=https://host.llm/api
   OPENAI_API_KEY=openai_api_key
   ```
 
-  - 5. Добавьте ключ Telegram-бота:
+  - 4. Добавьте ключ Telegram-бота:
   
   ```
   BOT_TOKEN=telegram_bot_token
   ```
 
-  - 6. После окончания предыдущих этапов запустите сервер:
+  - 5. После окончания предыдущих этапов запустите сервер:
   
   ```
   docker compose up
