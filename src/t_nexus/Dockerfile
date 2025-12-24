@@ -14,6 +14,3 @@ RUN python -m pip install --upgrade pip && python -m pip install -e .
 # RUN chmod +x /app/docker/server_entrypoint.sh
 
 EXPOSE 8000
-
-# Entrypoint will patch `hipporag.yaml` based on env vars and start uvicorn
-CMD ["uvicorn main:app --reload --host localhost --port 8000", "python run_bot.py"]

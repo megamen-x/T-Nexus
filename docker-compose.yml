@@ -6,13 +6,6 @@ services:
       - "6334:6334" # gRPC (optional)
     volumes:
       - qdrant_storage:/qdrant/storage
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:6333/ || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
   embedder:
     build:
       context: ./embedder_server
@@ -23,6 +16,8 @@ services:
       - EMBEDDING_MODEL_NAME=deepvk/USER-bge-m3
       - DEVICE=cuda
       - ENGINE=torch
+    env_file:
+      - .env
     volumes:
       - hf_cache:/root/.cache/huggingface
     gpus: all
@@ -34,25 +29,65 @@ services:
     build:
       context: .
       dockerfile: src/t_nexus/Dockerfile
+    image: t_nexus_server:0.1
     ports:
       - "8000:8000"
     environment:
-      # used by the entrypoint script to patch hipporag.yaml
       - EMBEDDER_URL=http://embedder:8888
       - QDRANT_URL=http://qdrant:6333
       - PYTHONUNBUFFERED=1
     volumes:
-      # Mount the hipporag config so it can be patched at container start
-      - ./src/t_nexus/ml/config/hipporag.yaml:/app/src/t_nexus/ml/config/hipporag.yaml:ro
-      # Optional: persist sqlite DB if used
-      - ./tnexus.db:/app/tnexus.db
-    # depends_on:
-    #   qdrant:
-    #     condition: service_healthy
-    #   embedder:
-    #     condition: service_started
+      - ./:/app
+    depends_on:
+      qdrant:
+        condition: service_started
+      embedder:
+        condition: service_started
+      neo4j:
+        condition: service_started
     restart: unless-stopped
+    command: >
+      sh -c "uvicorn src.t_nexus.main:app --reload --host 0.0.0.0 --port 8000"
+
+  neo4j:
+    image: neo4j:latest
+    volumes:  
+        - neo4j_logs:/logs
+        - neo4j_config:/config
+        - neo4j_data:/data
+        - neo4j_plugins:/plugins
+    environment:
+        - NEO4J_AUTH=neo4j/Lhfrjy2003P_101 
+        - NEO4J_PLUGINS='["graph-data-science"]'
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    restart: always
+
+  tg_bot:
+    image: t_nexus_server:0.1
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+    depends_on:
+      qdrant:
+        condition: service_started
+      embedder:
+        condition: service_started
+      neo4j:
+        condition: service_started
+      server:
+        condition: service_started
+      
+    restart: unless-stopped
+    command: >
+      sh -c "python ./src/t_nexus/run_bot.py"
 
 volumes:
   qdrant_storage:
   hf_cache:
+  neo4j_logs:
+  neo4j_config:
+  neo4j_data:
+  neo4j_plugins:

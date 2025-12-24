@@ -13,8 +13,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./tnexus.db"
 
     BOT_TOKEN: str =  "8377171332:AAFuNVmTDyqpz1fRDdYU_szfVxs_NwOhe_4"
-    RAG_URL: str = "http://localhost:8001/"
-    TRANSCRIPTION_URL: str = "http://localhost:8002/transcribe"
+    RAG_URL: str = "http://localhost:8000/"
     TG_DB_PATH: str = "telegram_bot.db"
 
 settings = Settings()
