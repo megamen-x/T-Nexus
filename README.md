@@ -90,7 +90,7 @@ https://drive.google.com/file/d/1FX3fw95I25ZXZTsWsgpcxJiVebxllx5g/view?usp=shari
   git clone https://github.com/megamen-x/T-Nexus.git
   ```
 
-  - 2. Создайте окружение и установите зависимости проекта (версия Python, на которой тестировалось: 3.12.12):
+  - 2. Создайте окружение и установите зависимости проекта:
 
   ```
   uv venv .venv
