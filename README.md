@@ -90,12 +90,12 @@ https://drive.google.com/file/d/1FX3fw95I25ZXZTsWsgpcxJiVebxllx5g/view?usp=shari
   git clone https://github.com/megamen-x/T-Nexus.git
   ```
 
-  - 2. Создайте окружение и установите зависимости проекта:
+  - 2. Создайте окружение и установите зависимости проекта (версия Python, на которой тестировалось: 3.12.12):
 
   ```
-  python -m venv .venv
+  uv venv .venv
   source .venv/bin/activate
-  pip install -e .
+  uv pip install -e .
   ```
 
   - 3. Скопируйте содержимое файла .env.example в файл .env 
