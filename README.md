@@ -32,7 +32,8 @@
 ## <h3 align="start"><a id="title2">Описание решения</a></h3>
 
 **Пример работы:**
-[![Watch the video](https://raw.githubusercontent.com/megamen-x/T-Nexus/main/assets/t_nexus_avatar.png)](https://raw.githubusercontent.com/megamen-x/T-Nexus/main/assets/t-nexus-nano.mp4)
+
+https://github.com/user-attachments/assets/32361304-f046-44ef-8464-a1af3d432e90
 
 **Обработка данных:**
 
