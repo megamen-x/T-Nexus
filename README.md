@@ -31,6 +31,9 @@
 
 ## <h3 align="start"><a id="title2">Описание решения</a></h3>
 
+**Пример работы:**
+[![Watch the video](https://raw.githubusercontent.com/megamen-x/T-Nexus/main/assets/t_nexus_avatar.png)](https://raw.githubusercontent.com/megamen-x/T-Nexus/main/assets/t-nexus-nano.mp4)
+
 **Обработка данных:**
 
 Поля датасета:
