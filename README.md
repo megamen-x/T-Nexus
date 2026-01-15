@@ -178,6 +178,11 @@ Metrics | &#x2610; | &#x2610; |
 
 <p align="right">(<a href="#readme-top"><i>Вернуться наверх</i></a>)</p>
 
+## <h3 align="start"><a id="title4">Метрики</a></h3> 
+
+<img src="/assets/metrics.png" width="100%">
+
+<p align="right">(<a href="#readme-top"><i>Вернуться наверх</i></a>)</p>
 
 ## <h3 align="start"><a id="title5">Команда</a></h3> 
 
