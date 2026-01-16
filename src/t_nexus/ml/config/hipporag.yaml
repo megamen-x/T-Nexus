@@ -1,10 +1,18 @@
 llm:
   model: deepseek-chat
   base_url: https://api.deepseek.com
-  requests_per_minute: 30
   api_key: your_api_key
   temperature: 0.0
   max_output_tokens: 8192
+  response_format: json_object
+  requests_per_minute: 30
+  tokens_per_minute: 0
+  max_concurrent: 10
+  request_timeout: 120.0
+  connect_timeout: 10.0
+  max_retries: 3
+  retry_min_wait: 1.0
+  retry_max_wait: 30.0
 
 embeddings:
   model: deepvk/USER-bge-m3
@@ -12,6 +20,12 @@ embeddings:
   api_key: your_api_key
   batch_size: 32
   normalize_embeddings: true
+  requests_per_minute: 0
+  max_concurrent: 20
+  request_timeout: 60.0
+  max_retries: 3
+  retry_min_wait: 1.0
+  retry_max_wait: 30.0
 
 vector_store:
   backend: qdrant
@@ -27,7 +41,7 @@ neo4j:
   uri: bolt://neo4j:7687
   user: neo4j
   # database: testing_hippo
-  password: Lhfrjy2003P_101
+  password: your_password
   graph_projection: hipporag_graph
 
 rabbitmq:
@@ -49,3 +63,6 @@ retrieval:
   synonym_top_k: 2047
   synonym_threshold: 0.8
   engine: networkx
+
+dataset: musique
+save_dir: hipporag_testing_dir
